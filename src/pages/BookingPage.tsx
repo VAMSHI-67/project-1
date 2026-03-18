@@ -1,193 +1,185 @@
-import { useEffect, useMemo, useState } from "react";
-import { DateRange } from "react-day-picker";
-import { formatDate, hasAvailabilityConflict, validateDateRange } from "../lib/booking";
-import {
-  createBooking,
-  fetchBlockedDatesByRoom,
-  fetchBookingsByRoom,
-  fetchRooms
-} from "../lib/firestore";
-import { BlockedDateRange, Booking, Room } from "../lib/types";
-import { DateRangePicker } from "../components/booking/DateRangePicker";
-import { BookingForm, BookingFormValues } from "../components/booking/BookingForm";
+import { useMemo, useState } from "react";
+import { AlertCircle, CheckCircle2, Clock3, MessageCircle } from "lucide-react";
 import { Card } from "../components/shared/Card";
-import { CheckCircle2 } from "lucide-react";
-import { motion } from "framer-motion";
-import { useSearchParams } from "react-router-dom";
-import { demoRooms } from "../data/rooms";
+import { siteConfig, whatsappBookingLink } from "../data/site";
 
-const expandRange = (start: string, end: string, includeEnd: boolean) => {
-  const dates: string[] = [];
-  const current = new Date(start);
-  const endDate = new Date(end);
-  const lastDate = includeEnd ? endDate : new Date(endDate.getTime() - 24 * 60 * 60 * 1000);
-  while (current <= lastDate) {
-    dates.push(formatDate(current));
-    current.setDate(current.getDate() + 1);
-  }
-  return dates;
+const HOURS_12 = 12 * 60 * 60 * 1000;
+
+const formatDateTime = (value: string) => {
+  if (!value) return "";
+  const date = new Date(value);
+  return new Intl.DateTimeFormat("en-IN", {
+    dateStyle: "medium",
+    timeStyle: "short"
+  }).format(date);
 };
 
 export const BookingPage = () => {
-  const [rooms, setRooms] = useState<Room[]>(demoRooms);
-  const [dateRange, setDateRange] = useState<DateRange | undefined>();
-  const [loading, setLoading] = useState(false);
-  const [confirmation, setConfirmation] = useState<Booking | null>(null);
+  const [guestName, setGuestName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [guests, setGuests] = useState(16);
+  const [checkIn, setCheckIn] = useState("");
+  const [checkOut, setCheckOut] = useState("");
+  const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [searchParams] = useSearchParams();
-  const preselectedRoom = searchParams.get("room") ?? undefined;
-  const [activeRoomId, setActiveRoomId] = useState(preselectedRoom ?? demoRooms[0]?.id ?? "");
 
-  useEffect(() => {
-    const loadRooms = async () => {
-      const roomData = await fetchRooms();
-      if (roomData.length > 0) {
-        setRooms(roomData);
-        if (!activeRoomId) {
-          setActiveRoomId(preselectedRoom ?? roomData[0]?.id ?? "");
-        }
-      }
-    };
-    loadRooms();
-  }, [activeRoomId, preselectedRoom]);
+  const duration = useMemo(() => {
+    if (!checkIn || !checkOut) return null;
+    const start = new Date(checkIn).getTime();
+    const end = new Date(checkOut).getTime();
+    if (Number.isNaN(start) || Number.isNaN(end) || end <= start) return null;
+    const diff = end - start;
+    const hours = diff / (1000 * 60 * 60);
+    const days = diff / (1000 * 60 * 60 * 24);
+    return { hours, days, diff };
+  }, [checkIn, checkOut]);
 
-  const maxGuestsByRoom = useMemo(
-    () => Object.fromEntries(rooms.map((room) => [room.id, room.maxGuests])),
-    [rooms]
-  );
-
-  const [disabledDates, setDisabledDates] = useState<string[]>([]);
-
-  useEffect(() => {
-    const roomId = activeRoomId || preselectedRoom || rooms[0]?.id;
-    if (!roomId) return;
-    const loadAvailability = async () => {
-      const [bookingsData, blockedData] = await Promise.all([
-        fetchBookingsByRoom(roomId),
-        fetchBlockedDatesByRoom(roomId)
-      ]);
-      const bookedDays = bookingsData
-        .filter((booking) => booking.status !== "canceled")
-        .flatMap((booking) => expandRange(booking.checkInDate, booking.checkOutDate, false));
-      const blockedDays = blockedData.flatMap((block) => expandRange(block.startDate, block.endDate, true));
-      setDisabledDates([...new Set([...bookedDays, ...blockedDays])]);
-    };
-    loadAvailability();
-  }, [activeRoomId, preselectedRoom, rooms]);
-
-  const handleBookingSubmit = async (values: BookingFormValues) => {
+  const sendToWhatsApp = () => {
     setError(null);
-    setLoading(true);
-    const rangeError = validateDateRange(values.checkInDate, values.checkOutDate);
-    if (rangeError) {
-      setError(rangeError);
-      setLoading(false);
+
+    if (!guestName.trim() || !phone.trim() || !checkIn || !checkOut) {
+      setError("Please fill your name, phone number, and booking date/time details.");
       return;
     }
 
-    const selectedRoom = rooms.find((room) => room.id === values.roomId);
-    if (selectedRoom && values.guests > selectedRoom.maxGuests) {
-      setError(`Guest count exceeds max of ${selectedRoom.maxGuests}.`);
-      setLoading(false);
+    if (!duration || duration.diff < HOURS_12) {
+      setError("Minimum booking duration is 12 hours for the whole farmstay.");
       return;
     }
 
-    const [bookingsData, blockedData] = await Promise.all([
-      fetchBookingsByRoom(values.roomId),
-      fetchBlockedDatesByRoom(values.roomId)
-    ]);
-    if (hasAvailabilityConflict(values.checkInDate, values.checkOutDate, bookingsData, blockedData)) {
-      setError("Those dates are unavailable. Please pick another range.");
-      setLoading(false);
-      return;
-    }
+    const bookingMessage = [
+      "Hi Kanvera Farms, I would like to book the whole farmstay.",
+      `Name: ${guestName}`,
+      `Phone: ${phone}`,
+      `Guests: ${guests}`,
+      `Check-in: ${formatDateTime(checkIn)}`,
+      `Check-out: ${formatDateTime(checkOut)}`,
+      `Duration: ${duration.hours.toFixed(1)} hours (~${duration.days.toFixed(2)} days)`,
+      notes.trim() ? `Notes: ${notes}` : null
+    ]
+      .filter(Boolean)
+      .join("\n");
 
-    await createBooking({
-      roomId: values.roomId,
-      guestName: values.guestName,
-      email: values.email,
-      phone: values.phone,
-      guests: values.guests,
-      checkInDate: values.checkInDate,
-      checkOutDate: values.checkOutDate,
-      status: "pending",
-      notes: values.notes
-    });
-
-    setConfirmation({
-      id: "confirmed",
-      roomId: values.roomId,
-      guestName: values.guestName,
-      email: values.email,
-      phone: values.phone,
-      guests: values.guests,
-      checkInDate: values.checkInDate,
-      checkOutDate: values.checkOutDate,
-      status: "pending",
-      createdAt: new Date().toISOString(),
-      notes: values.notes
-    });
-    setLoading(false);
+    window.open(`${whatsappBookingLink}?text=${encodeURIComponent(bookingMessage)}`, "_blank", "noopener,noreferrer");
   };
 
   return (
     <div className="section-padding">
       <div className="mb-10">
-        <p className="text-sm uppercase tracking-[0.2em] text-forest-500">Booking</p>
-        <h1 className="mt-3 font-display text-4xl text-forest-900">Reserve your GreenNest experience.</h1>
+        <p className="text-sm uppercase tracking-[0.2em] text-forest-500">Whole Property Booking</p>
+        <h1 className="mt-3 font-display text-4xl text-forest-900">Book the entire Kanvera Farms stay.</h1>
+        <p className="mt-3 max-w-2xl text-forest-600">
+          This is an exclusive full-property booking. Minimum duration is <strong>12 hours</strong>, and bookings can
+          be extended to multiple days.
+        </p>
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-[1.1fr_1fr]">
+      <div className="grid gap-8 lg:grid-cols-[1.2fr_1fr]">
         <Card>
-          <h2 className="font-display text-2xl text-forest-900">Select your dates</h2>
-          <p className="mt-2 text-sm text-forest-600">Past dates and blocked stays are disabled.</p>
-          <div className="mt-4">
-            <DateRangePicker value={dateRange} onChange={setDateRange} disabledDates={disabledDates} />
+          <h2 className="font-display text-2xl text-forest-900">Booking Details</h2>
+          <p className="mt-2 text-sm text-forest-600">
+            Share your preferred schedule and we will continue confirmation on WhatsApp.
+          </p>
+
+          <div className="mt-6 grid gap-4 md:grid-cols-2">
+            <label className="space-y-2 text-sm font-medium text-forest-700">
+              Full Name
+              <input
+                value={guestName}
+                onChange={(event) => setGuestName(event.target.value)}
+                className="w-full rounded-xl border border-forest-100 bg-white/80 px-4 py-3"
+                placeholder="Your name"
+              />
+            </label>
+            <label className="space-y-2 text-sm font-medium text-forest-700">
+              Phone Number
+              <input
+                value={phone}
+                onChange={(event) => setPhone(event.target.value)}
+                className="w-full rounded-xl border border-forest-100 bg-white/80 px-4 py-3"
+                placeholder="Your WhatsApp number"
+              />
+            </label>
+            <label className="space-y-2 text-sm font-medium text-forest-700">
+              Check-in Date & Time
+              <input
+                type="datetime-local"
+                value={checkIn}
+                onChange={(event) => setCheckIn(event.target.value)}
+                className="w-full rounded-xl border border-forest-100 bg-white/80 px-4 py-3"
+              />
+            </label>
+            <label className="space-y-2 text-sm font-medium text-forest-700">
+              Check-out Date & Time
+              <input
+                type="datetime-local"
+                value={checkOut}
+                onChange={(event) => setCheckOut(event.target.value)}
+                className="w-full rounded-xl border border-forest-100 bg-white/80 px-4 py-3"
+              />
+            </label>
+            <label className="space-y-2 text-sm font-medium text-forest-700">
+              Number of Guests
+              <input
+                type="number"
+                min={1}
+                value={guests}
+                onChange={(event) => setGuests(Number(event.target.value) || 1)}
+                className="w-full rounded-xl border border-forest-100 bg-white/80 px-4 py-3"
+              />
+            </label>
+            <label className="space-y-2 text-sm font-medium text-forest-700 md:col-span-2">
+              Notes (optional)
+              <textarea
+                value={notes}
+                onChange={(event) => setNotes(event.target.value)}
+                rows={4}
+                className="w-full rounded-xl border border-forest-100 bg-white/80 px-4 py-3"
+                placeholder="Occasion, food preferences, special requests..."
+              />
+            </label>
           </div>
+
           {error && (
-            <motion.p
-              initial={{ x: -8, opacity: 0 }}
-              animate={{ x: [0, -6, 6, -4, 4, 0], opacity: 1 }}
-              transition={{ duration: 0.4 }}
-              className="mt-4 text-sm text-red-600"
-            >
-              {error}
-            </motion.p>
+            <p className="mt-4 inline-flex items-center gap-2 rounded-xl bg-red-50 px-4 py-2 text-sm text-red-700">
+              <AlertCircle className="h-4 w-4" /> {error}
+            </p>
           )}
+
+          <button
+            type="button"
+            onClick={sendToWhatsApp}
+            className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-forest-700 via-forest-600 to-forest-500 px-5 py-3 text-sm font-semibold text-white shadow-glow transition hover:scale-[1.02]"
+          >
+            <MessageCircle className="h-4 w-4" /> Continue Booking on WhatsApp
+          </button>
         </Card>
-        <Card>
-          {!confirmation ? (
-            <>
-              <h2 className="font-display text-2xl text-forest-900">Guest details</h2>
-              <p className="mt-2 text-sm text-forest-600">We will confirm your stay within 24 hours.</p>
-              <div className="mt-4">
-                <BookingForm
-                  rooms={rooms}
-                  selectedRoomId={activeRoomId}
-                  dateRange={dateRange}
-                  onSubmit={handleBookingSubmit}
-                  submitting={loading}
-                  maxGuestsByRoom={maxGuestsByRoom}
-                  onRoomChange={setActiveRoomId}
-                />
-              </div>
-            </>
-          ) : (
-            <div className="space-y-4 text-center">
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ type: "spring", stiffness: 120 }}
-              >
-                <CheckCircle2 className="mx-auto h-12 w-12 text-forest-600" />
-              </motion.div>
-              <h2 className="font-display text-2xl text-forest-900">Booking confirmed!</h2>
-              <p className="text-sm text-forest-600">
-                We have reserved {confirmation.checkInDate} → {confirmation.checkOutDate}.
+
+        <Card className="space-y-4">
+          <h2 className="font-display text-2xl text-forest-900">Booking Policy</h2>
+          <div className="rounded-2xl bg-forest-50 p-4 text-sm text-forest-700">
+            <p className="inline-flex items-center gap-2 font-semibold text-forest-900">
+              <Clock3 className="h-4 w-4" /> Minimum duration: 12 hours
+            </p>
+            <p className="mt-2">After 12 hours, you can extend your booking to full-day or multiple-day stays.</p>
+          </div>
+
+          {duration && duration.diff >= HOURS_12 && (
+            <div className="rounded-2xl bg-emerald-50 p-4 text-sm text-emerald-700">
+              <p className="inline-flex items-center gap-2 font-semibold">
+                <CheckCircle2 className="h-4 w-4" /> Duration valid
               </p>
-              <p className="text-xs text-forest-500">A confirmation email will arrive shortly.</p>
+              <p className="mt-2">
+                {duration.hours.toFixed(1)} hours (~{duration.days.toFixed(2)} days)
+              </p>
             </div>
           )}
+
+          <div className="rounded-2xl border border-forest-100 bg-white/80 p-4 text-sm text-forest-600">
+            <p className="font-medium text-forest-900">Direct Contact</p>
+            <p className="mt-1">{siteConfig.contact.phoneDisplay}</p>
+            <p className="mt-1">{siteConfig.contact.address}</p>
+          </div>
         </Card>
       </div>
     </div>

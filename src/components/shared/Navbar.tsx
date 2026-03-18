@@ -1,11 +1,11 @@
 import { Link, NavLink } from "react-router-dom";
-import { Leaf, Menu } from "lucide-react";
+import { Leaf, MessageCircle, Menu } from "lucide-react";
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { siteConfig, whatsappBookingLink } from "../../data/site";
 
 const navItems = [
   { label: "Home", to: "/" },
-  { label: "Rooms", to: "/rooms" },
   { label: "Booking", to: "/booking" },
   { label: "Contact", to: "/contact" }
 ];
@@ -14,11 +14,14 @@ export const Navbar = () => {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-40 bg-forest-50/80 backdrop-blur-lg">
+    <header className="sticky top-0 z-40 border-b border-forest-100 bg-forest-50/85 backdrop-blur-lg">
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
         <Link to="/" className="flex items-center gap-2 text-forest-800">
           <Leaf className="h-6 w-6 text-forest-600" />
-          <span className="font-display text-lg">GreenNest Farm Stay</span>
+          <div>
+            <p className="font-display text-lg leading-tight">{siteConfig.brand.name}</p>
+            <p className="text-[10px] uppercase tracking-[0.22em] text-forest-500">{siteConfig.brand.localName}</p>
+          </div>
         </Link>
         <div className="hidden items-center gap-6 md:flex">
           {navItems.map((item) => (
@@ -32,12 +35,14 @@ export const Navbar = () => {
               {item.label}
             </NavLink>
           ))}
-          <Link
-            to="/booking"
-            className="rounded-full bg-gradient-to-r from-forest-700 via-forest-600 to-forest-500 px-5 py-3 text-sm font-semibold text-white shadow-glow transition hover:scale-[1.02]"
+          <a
+            href={whatsappBookingLink}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-forest-700 via-forest-600 to-forest-500 px-5 py-3 text-sm font-semibold text-white shadow-glow transition hover:scale-[1.02]"
           >
-            Book Your Stay
-          </Link>
+            <MessageCircle className="h-4 w-4" /> Book on WhatsApp
+          </a>
         </div>
         <button
           type="button"
@@ -49,11 +54,7 @@ export const Navbar = () => {
         </button>
       </nav>
       {open && (
-        <motion.div
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="md:hidden"
-        >
+        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="md:hidden">
           <div className="flex flex-col gap-3 px-6 pb-6">
             {navItems.map((item) => (
               <NavLink
@@ -67,13 +68,14 @@ export const Navbar = () => {
                 {item.label}
               </NavLink>
             ))}
-            <Link
-              to="/booking"
-              onClick={() => setOpen(false)}
-              className="rounded-full bg-gradient-to-r from-forest-700 via-forest-600 to-forest-500 px-5 py-3 text-center text-sm font-semibold text-white shadow-glow"
+            <a
+              href={whatsappBookingLink}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-forest-700 via-forest-600 to-forest-500 px-5 py-3 text-center text-sm font-semibold text-white shadow-glow"
             >
-              Book Your Stay
-            </Link>
+              <MessageCircle className="h-4 w-4" /> Book on WhatsApp
+            </a>
           </div>
         </motion.div>
       )}

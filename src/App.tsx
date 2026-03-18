@@ -4,8 +4,6 @@ import { Navbar } from "./components/shared/Navbar";
 import { Footer } from "./components/shared/Footer";
 import { QuickBookingWidget } from "./components/shared/QuickBookingWidget";
 import { HomePage } from "./pages/HomePage";
-import { RoomsPage } from "./pages/RoomsPage";
-import { RoomDetailPage } from "./pages/RoomDetailPage";
 import { BookingPage } from "./pages/BookingPage";
 import { ContactPage } from "./pages/ContactPage";
 import { AdminLoginPage } from "./pages/admin/AdminLoginPage";
@@ -46,7 +44,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => (
   <div className="min-h-screen bg-forest-50">
     <div className="border-b border-forest-100 bg-white/70 backdrop-blur-lg">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-        <span className="font-display text-lg text-forest-800">GreenNest Admin</span>
+        <span className="font-display text-lg text-forest-800">Kanvera Admin</span>
       </div>
     </div>
     {children}
@@ -66,26 +64,6 @@ const App = () => {
               <PublicLayout>
                 <PageWrapper>
                   <HomePage />
-                </PageWrapper>
-              </PublicLayout>
-            }
-          />
-          <Route
-            path="/rooms"
-            element={
-              <PublicLayout>
-                <PageWrapper>
-                  <RoomsPage />
-                </PageWrapper>
-              </PublicLayout>
-            }
-          />
-          <Route
-            path="/rooms/:roomId"
-            element={
-              <PublicLayout>
-                <PageWrapper>
-                  <RoomDetailPage />
                 </PageWrapper>
               </PublicLayout>
             }
