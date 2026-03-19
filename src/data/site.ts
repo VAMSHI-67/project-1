@@ -1,3 +1,10 @@
+import heroImageSrc from "../assets/images/k1.jpg";
+import galleryImage2 from "../assets/images/k2.jpg";
+import galleryImage3 from "../assets/images/k3.jpg";
+import galleryImage4 from "../assets/images/k4.jpg";
+import galleryImage5 from "../assets/images/k5.jpg";
+import galleryImage6 from "../assets/images/k6.jpg";
+
 export const siteConfig = {
   brand: {
     name: "Kanvera Farms",
@@ -17,25 +24,30 @@ export const siteConfig = {
 
 export const whatsappBookingLink = `https://wa.me/${siteConfig.contact.phoneRaw}`;
 
+export const heroImage = {
+  src: heroImageSrc,
+  alt: "Kanvera Farms courtyard and stay wing"
+};
+
 export const galleryImages = [
   {
-    src: "https://content.jdmagicbox.com/comp/rangareddy/k6/040pxx40.xx40.210911110128.n7k6/catalogue/kanvera-resort-and-convention-shamirpet-rangareddy-banquet-halls-9pt6f3dg2g.jpg",
-    alt: "Kanvera Farms poolside and event lawn"
+    src: galleryImage2,
+    alt: "Kanvera Farms garden walkway"
   },
   {
-    src: "https://content.jdmagicbox.com/comp/rangareddy/k6/040pxx40.xx40.210911110128.n7k6/catalogue/kanvera-resort-and-convention-shamirpet-rangareddy-banquet-halls-1bh3fpixkk.jpg",
-    alt: "Kanvera Farms exterior and greenery"
+    src: galleryImage3,
+    alt: "Kanvera Farms stay wing"
   },
   {
-    src: "https://images.unsplash.com/photo-1564501049412-61c2a3083791?auto=format&fit=crop&w=1200&q=80",
-    alt: "Warm farmhouse suite aesthetic"
+    src: galleryImage4,
+    alt: "Kanvera Farms seating area"
   },
   {
-    src: "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1200&q=80",
-    alt: "Cozy bedroom setup for group stays"
+    src: galleryImage5,
+    alt: "Kanvera Farms outdoor lounge"
   },
   {
-    src: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1200&q=80",
-    alt: "Comfortable living lounge"
+    src: galleryImage6,
+    alt: "Kanvera Farms property view"
   }
 ];

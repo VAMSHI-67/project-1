@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Card } from "../components/shared/Card";
-import { galleryImages, siteConfig, whatsappBookingLink } from "../data/site";
+import { galleryImages, heroImage, siteConfig, whatsappBookingLink } from "../data/site";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -41,11 +41,7 @@ export const HomePage = () => {
     <div className="bg-forest-50">
       <section className="relative min-h-[88vh] overflow-hidden">
         <div className="absolute inset-0">
-          <img
-            src={galleryImages[0].src}
-            alt="Kanvera Farms lush property"
-            className="h-full w-full object-cover"
-          />
+          <img src={heroImage.src} alt={heroImage.alt} className="h-full w-full object-cover" />
           <div className="absolute inset-0 bg-hero-gradient" />
         </div>
 

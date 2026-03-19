@@ -1,4 +1,13 @@
 import { Room } from "../lib/types";
+import b1 from "../assets/images/b1.jpg";
+import b2 from "../assets/images/b2.jpg";
+import k1 from "../assets/images/k1.jpg";
+import k2 from "../assets/images/k2.jpg";
+import k3 from "../assets/images/k3.jpg";
+import k4 from "../assets/images/k4.jpg";
+import k5 from "../assets/images/k5.jpg";
+import k6 from "../assets/images/k6.jpg";
+import k7 from "../assets/images/k7.jpg";
 
 export const demoRooms: Room[] = [
   {
@@ -9,11 +18,7 @@ export const demoRooms: Room[] = [
     pricePerNight: 240,
     maxGuests: 2,
     amenities: ["King bed", "Mountain view", "Soaking tub", "Private balcony", "Farm breakfast"],
-    images: [
-      "https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=1200&q=80",
-      "https://images.unsplash.com/photo-1505691723518-36a5ac3be353?auto=format&fit=crop&w=1200&q=80",
-      "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=1200&q=80"
-    ]
+    images: [k3, k4, k5]
   },
   {
     id: "orchard-cabin",
@@ -23,11 +28,7 @@ export const demoRooms: Room[] = [
     pricePerNight: 180,
     maxGuests: 3,
     amenities: ["Queen bed", "Fireplace", "Garden patio", "Kitchenette", "Organic toiletries"],
-    images: [
-      "https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=1200&q=80",
-      "https://images.unsplash.com/photo-1502672023488-70e25813eb80?auto=format&fit=crop&w=1200&q=80",
-      "https://images.unsplash.com/photo-1445019980597-93fa8acb246c?auto=format&fit=crop&w=1200&q=80"
-    ]
+    images: [b1, b2, k6]
   },
   {
     id: "brookside-loft",
@@ -37,10 +38,6 @@ export const demoRooms: Room[] = [
     pricePerNight: 210,
     maxGuests: 4,
     amenities: ["Two double beds", "Panoramic view", "Reading nook", "Outdoor shower", "Yoga mats"],
-    images: [
-      "https://images.unsplash.com/photo-1505691723518-36a5ac3be353?auto=format&fit=crop&w=1200&q=80",
-      "https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=1200&q=80",
-      "https://images.unsplash.com/photo-1499696010181-8e90c19a48e0?auto=format&fit=crop&w=1200&q=80"
-    ]
+    images: [k7, k2, k1]
   }
 ];
