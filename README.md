@@ -1,71 +1,56 @@
-# GreenNest Farm Stay
+# Kanvera Farms Website
 
-A premium farm stay booking demo built with **React + TypeScript**, **Tailwind CSS**, **Framer Motion**, and **Firebase**.
+A static marketing and booking website for Kanvera Farms built with React, TypeScript, Tailwind CSS, and Framer Motion.
 
-## Features
+## Overview
 
-- Responsive guest website with premium resort styling
-- Rooms listing and detail pages with availability calendar
-- Booking flow with validation and Firestore persistence
-- Admin dashboard with widgets, booking management, and date blocking
-- Firebase Auth guard for admin routes
+- Public pages only: `/`, `/booking`, `/contact`
+- WhatsApp-first whole-property booking flow
+- Shared site config for brand, contact details, maps, and gallery content
+- Vercel-friendly static deployment target
 
 ## Tech Stack
 
-- React + TypeScript
-- React Router
-- React Hook Form
+- React 18
+- TypeScript
+- Vite
 - Tailwind CSS
 - Framer Motion
-- Firebase (Firestore + Auth)
 
-## Getting Started
-
-### 1. Install dependencies
+## Local Development
 
 ```bash
 npm install
-```
-
-### 2. Configure environment variables
-
-Create a `.env` file in the project root:
-
-```bash
-VITE_FIREBASE_API_KEY=your_api_key
-VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=your_project_id
-VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
-VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-VITE_FIREBASE_APP_ID=your_app_id
-VITE_ADMIN_EMAIL=admin@greennestdemo.com
-```
-
-### 3. Seed demo rooms
-
-```bash
-npm run seed:rooms
-```
-
-### 4. Run the dev server
-
-```bash
 npm run dev
 ```
 
-## Build for production
+## Production Build
 
 ```bash
 npm run build
 ```
 
-## Firebase Setup Notes
-
-- Enable **Email/Password** authentication in Firebase Auth.
-- Create an admin user with the same email you set in `VITE_ADMIN_EMAIL`.
-- Firestore collections used: `rooms`, `bookings`, `blockedDates`.
+The output is generated in `dist/`.
 
 ## Deployment
 
-- **Vercel**: Import the repo, set env vars in the Vercel dashboard, deploy.
-- **Firebase Hosting**: `firebase init hosting` and deploy the `dist/` directory after running `npm run build`.
+Deploy the latest `main` branch to Vercel.
+
+Recommended production settings:
+
+- Framework preset: `Vite`
+- Build command: `npm run build`
+- Output directory: `dist`
+- Production branch: `main`
+
+## Booking Flow
+
+Kanvera Farms uses a WhatsApp-first booking model.
+
+- Guests submit whole-property stay details on `/booking`
+- Minimum booking duration is 12 hours
+- Booking CTA opens WhatsApp for `+91 89092 39999`
+
+## Content Source
+
+Branding, contact details, map link, WhatsApp number, and gallery content are centralized in `src/data/site.ts`.

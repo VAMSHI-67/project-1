@@ -31,7 +31,7 @@ const nearbyCategories = [
 ];
 
 const highlights = [
-  "Nice ambience and perfect for groups of 16–20 people.",
+  "Nice ambience and perfect for groups of 16-20 people.",
   "Well-maintained property and supportive management.",
   "Great greenery, clean rooms, tasty food, and friendly staff."
 ];
@@ -105,7 +105,7 @@ export const HomePage = () => {
           >
             <div>
               <p className="text-xs uppercase tracking-widest text-forest-100">Rating</p>
-              <p className="text-lg font-semibold text-white">4.4 ★</p>
+              <p className="text-lg font-semibold text-white">4.4 stars</p>
             </div>
             <div>
               <p className="text-xs uppercase tracking-widest text-forest-100">Reviews</p>
@@ -143,7 +143,7 @@ export const HomePage = () => {
             <div className="space-y-3">
               {highlights.map((highlight) => (
                 <Card key={highlight} className="border border-forest-100 bg-white/80 py-4">
-                  <p className="text-sm text-forest-700">“{highlight}”</p>
+                  <p className="text-sm text-forest-700">"{highlight}"</p>
                 </Card>
               ))}
             </div>
@@ -174,7 +174,11 @@ export const HomePage = () => {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {galleryImages.map((image) => (
             <div key={image.src} className="overflow-hidden rounded-3xl border border-forest-100 bg-white">
-              <img src={image.src} alt={image.alt} className="h-56 w-full object-cover transition duration-500 hover:scale-105" />
+              <img
+                src={image.src}
+                alt={image.alt}
+                className="h-56 w-full object-cover transition duration-500 hover:scale-105"
+              />
             </div>
           ))}
         </div>
