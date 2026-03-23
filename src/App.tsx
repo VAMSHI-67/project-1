@@ -3,9 +3,15 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Navbar } from "./components/shared/Navbar";
 import { Footer } from "./components/shared/Footer";
 import { QuickBookingWidget } from "./components/shared/QuickBookingWidget";
+import { AdminRouteGuard } from "./components/admin/AdminRouteGuard";
 import { HomePage } from "./pages/HomePage";
 import { BookingPage } from "./pages/BookingPage";
 import { ContactPage } from "./pages/ContactPage";
+import { AdminLoginPage } from "./pages/admin/AdminLoginPage";
+import { AdminDashboardPage } from "./pages/admin/AdminDashboardPage";
+import { AdminBookingsPage } from "./pages/admin/AdminBookingsPage";
+import { AdminCalendarPage } from "./pages/admin/AdminCalendarPage";
+import { AdminWalkthroughPage } from "./pages/admin/AdminWalkthroughPage";
 
 const pageVariants = {
   initial: { opacity: 0, y: 24 },
@@ -68,6 +74,62 @@ const App = () => {
                 <ContactPage />
               </PageWrapper>
             </PublicLayout>
+          }
+        />
+        <Route
+          path="/admin/login"
+          element={
+            <PageWrapper>
+              <AdminLoginPage />
+            </PageWrapper>
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            <PageWrapper>
+              <AdminLoginPage />
+            </PageWrapper>
+          }
+        />
+        <Route
+          path="/admin/dashboard"
+          element={
+            <AdminRouteGuard>
+              <PageWrapper>
+                <AdminDashboardPage />
+              </PageWrapper>
+            </AdminRouteGuard>
+          }
+        />
+        <Route
+          path="/admin/bookings"
+          element={
+            <AdminRouteGuard>
+              <PageWrapper>
+                <AdminBookingsPage />
+              </PageWrapper>
+            </AdminRouteGuard>
+          }
+        />
+        <Route
+          path="/admin/calendar"
+          element={
+            <AdminRouteGuard>
+              <PageWrapper>
+                <AdminCalendarPage />
+              </PageWrapper>
+            </AdminRouteGuard>
+          }
+        />
+        <Route
+          path="/admin/walkthrough"
+          element={
+            <AdminRouteGuard>
+              <PageWrapper>
+                <AdminWalkthroughPage />
+              </PageWrapper>
+            </AdminRouteGuard>
           }
         />
       </Routes>

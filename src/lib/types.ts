@@ -31,3 +31,15 @@ export type BlockedDateRange = {
   endDate: string;
   reason: string;
 };
+
+export type MediaCategory = "hero" | "walkthrough" | "rooms" | "secondary";
+
+export type WalkthroughImage = {
+  id: string;
+  url: string;
+  caption?: string;
+  order: number;
+  storagePath: string;
+  createdAt: string;
+  category: MediaCategory;
+};

@@ -18,12 +18,21 @@ export const BookingPage = () => {
   const [guestName, setGuestName] = useState("");
   const [phone, setPhone] = useState("");
   const [guests, setGuests] = useState(16);
-  const [checkIn, setCheckIn] = useState("");
-  const [checkOut, setCheckOut] = useState("");
+  const [checkInDate, setCheckInDate] = useState("");
+  const [checkInTime, setCheckInTime] = useState("12:00");
+  const [checkOutDate, setCheckOutDate] = useState("");
+  const [checkOutTime, setCheckOutTime] = useState("11:00");
   const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
 
+  const buildDateTime = (date: string, time: string) => {
+    if (!date || !time) return "";
+    return `${date}T${time}`;
+  };
+
   const duration = useMemo(() => {
+    const checkIn = buildDateTime(checkInDate, checkInTime);
+    const checkOut = buildDateTime(checkOutDate, checkOutTime);
     if (!checkIn || !checkOut) return null;
     const start = new Date(checkIn).getTime();
     const end = new Date(checkOut).getTime();
@@ -32,10 +41,13 @@ export const BookingPage = () => {
     const hours = diff / (1000 * 60 * 60);
     const days = diff / (1000 * 60 * 60 * 24);
     return { hours, days, diff };
-  }, [checkIn, checkOut]);
+  }, [checkInDate, checkInTime, checkOutDate, checkOutTime]);
 
   const sendToWhatsApp = () => {
     setError(null);
+
+    const checkIn = buildDateTime(checkInDate, checkInTime);
+    const checkOut = buildDateTime(checkOutDate, checkOutTime);
 
     if (!guestName.trim() || !phone.trim() || !checkIn || !checkOut) {
       setError("Please fill your name, phone number, and booking date/time details.");
@@ -60,7 +72,11 @@ export const BookingPage = () => {
       .filter(Boolean)
       .join("\n");
 
-    window.open(`${whatsappBookingLink}?text=${encodeURIComponent(bookingMessage)}`, "_blank", "noopener,noreferrer");
+    const whatsappUrl = `${whatsappBookingLink}?text=${encodeURIComponent(bookingMessage)}`;
+    const popup = window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+    if (!popup) {
+      window.location.assign(whatsappUrl);
+    }
   };
 
   return (
@@ -101,20 +117,38 @@ export const BookingPage = () => {
               />
             </label>
             <label className="space-y-2 text-sm font-medium text-forest-700">
-              Check-in Date & Time
+              Check-in Date
               <input
-                type="datetime-local"
-                value={checkIn}
-                onChange={(event) => setCheckIn(event.target.value)}
+                type="date"
+                value={checkInDate}
+                onChange={(event) => setCheckInDate(event.target.value)}
                 className="w-full rounded-xl border border-forest-100 bg-white/80 px-4 py-3"
               />
             </label>
             <label className="space-y-2 text-sm font-medium text-forest-700">
-              Check-out Date & Time
+              Check-in Time
               <input
-                type="datetime-local"
-                value={checkOut}
-                onChange={(event) => setCheckOut(event.target.value)}
+                type="time"
+                value={checkInTime}
+                onChange={(event) => setCheckInTime(event.target.value)}
+                className="w-full rounded-xl border border-forest-100 bg-white/80 px-4 py-3"
+              />
+            </label>
+            <label className="space-y-2 text-sm font-medium text-forest-700">
+              Check-out Date
+              <input
+                type="date"
+                value={checkOutDate}
+                onChange={(event) => setCheckOutDate(event.target.value)}
+                className="w-full rounded-xl border border-forest-100 bg-white/80 px-4 py-3"
+              />
+            </label>
+            <label className="space-y-2 text-sm font-medium text-forest-700">
+              Check-out Time
+              <input
+                type="time"
+                value={checkOutTime}
+                onChange={(event) => setCheckOutTime(event.target.value)}
                 className="w-full rounded-xl border border-forest-100 bg-white/80 px-4 py-3"
               />
             </label>

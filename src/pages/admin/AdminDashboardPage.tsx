@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion, animate } from "framer-motion";
-import { CalendarCheck, CreditCard, Users } from "lucide-react";
+import { CalendarCheck, Users } from "lucide-react";
+import { Link } from "react-router-dom";
 import { subscribeBookings, subscribeRooms } from "../../lib/firestore";
 import { Booking, Room } from "../../lib/types";
-import { ToggleSwitch } from "../../components/shared/ToggleSwitch";
+import { addDays, differenceInCalendarDays, max, min, parseISO, startOfDay } from "date-fns";
 
 const StatCard = ({ icon, label, value }: { icon: React.ReactNode; label: string; value: number }) => {
   const [display, setDisplay] = useState(0);
@@ -32,7 +33,6 @@ const StatCard = ({ icon, label, value }: { icon: React.ReactNode; label: string
 export const AdminDashboardPage = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
-  const [autoConfirm, setAutoConfirm] = useState(true);
 
   useEffect(() => {
     const unsubscribeBookings = subscribeBookings(setBookings);
@@ -44,18 +44,46 @@ export const AdminDashboardPage = () => {
   }, []);
 
   const upcoming = bookings.filter((booking) => booking.status !== "canceled");
-  const occupancy = Math.min(100, Math.round((upcoming.length / Math.max(rooms.length, 1)) * 100));
+
+  const occupancy = useMemo(() => {
+    const totalRooms = rooms.length;
+    if (!totalRooms) return 0;
+    const today = startOfDay(new Date());
+    const windowEnd = addDays(today, 7);
+    const roomNights = totalRooms * differenceInCalendarDays(windowEnd, today);
+    if (!roomNights) return 0;
+
+    const bookedNights = upcoming.reduce((sum, booking) => {
+      const checkIn = parseISO(booking.checkInDate);
+      const checkOut = parseISO(booking.checkOutDate);
+      if (checkOut <= today || checkIn >= windowEnd) return sum;
+
+      const overlapStart = max([checkIn, today]);
+      const overlapEnd = min([checkOut, windowEnd]);
+      const nights = Math.max(0, differenceInCalendarDays(overlapEnd, overlapStart));
+      return sum + nights;
+    }, 0);
+
+    return Math.min(100, Math.round((bookedNights / roomNights) * 100));
+  }, [rooms.length, upcoming]);
 
   return (
     <div className="section-padding">
-      <div className="mb-10">
-        <p className="text-sm uppercase tracking-[0.2em] text-forest-500">Dashboard</p>
-        <h1 className="mt-3 font-display text-4xl text-forest-900">Welcome back, host.</h1>
+      <div className="mb-10 flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <p className="text-sm uppercase tracking-[0.2em] text-forest-500">Dashboard</p>
+          <h1 className="mt-3 font-display text-4xl text-forest-900">Welcome back, host.</h1>
+        </div>
+        <Link
+          to="/admin/walkthrough"
+          className="rounded-full bg-gradient-to-r from-forest-700 via-forest-600 to-forest-500 px-5 py-3 text-sm font-semibold text-white shadow-glow"
+        >
+          Upload walkthrough images
+        </Link>
       </div>
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <StatCard icon={<Users className="h-5 w-5" />} label="Total bookings" value={bookings.length} />
         <StatCard icon={<CalendarCheck className="h-5 w-5" />} label="Upcoming stays" value={upcoming.length} />
-        <StatCard icon={<CreditCard className="h-5 w-5" />} label="Revenue estimate" value={upcoming.length * 220} />
         <StatCard icon={<CalendarCheck className="h-5 w-5" />} label="7-day occupancy" value={occupancy} />
       </div>
       <div className="mt-10 grid gap-6 lg:grid-cols-3">
@@ -89,18 +117,6 @@ export const AdminDashboardPage = () => {
           <h2 className="font-display text-xl text-forest-900">Today arrivals</h2>
           <p className="mt-3 text-4xl font-semibold text-forest-900">{upcoming.slice(0, 2).length}</p>
           <p className="text-sm text-forest-500">Guests checking in today.</p>
-        </motion.div>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="glass-card rounded-3xl p-6"
-        >
-          <h2 className="font-display text-xl text-forest-900">Automation</h2>
-          <div className="mt-4 flex items-center justify-between text-sm text-forest-600">
-            <span>Auto-confirm bookings</span>
-            <ToggleSwitch enabled={autoConfirm} onChange={setAutoConfirm} />
-          </div>
-          <p className="mt-3 text-xs text-forest-500">Toggle demo-only automation flows.</p>
         </motion.div>
       </div>
     </div>

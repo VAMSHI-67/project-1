@@ -1,33 +1,51 @@
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
-  Car,
-  Hotel,
   Landmark,
   MapPinned,
   MessageCircle,
-  ParkingCircle,
-  Pill,
-  Train,
-  Utensils
+  Droplet,
+  Waves
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Card } from "../components/shared/Card";
 import { galleryImages, heroImage, siteConfig, whatsappBookingLink } from "../data/site";
+import { subscribeHeroImages, subscribeSecondaryImages, subscribeWalkthroughImages } from "../lib/firestore";
+
+type WalkthroughAsset = {
+  src: string;
+  alt: string;
+  caption?: string;
+};
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
   visible: { opacity: 1, y: 0 }
 };
 
-const nearbyCategories = [
-  { label: "Restaurants", icon: Utensils },
-  { label: "Hotels", icon: Hotel },
-  { label: "Things to do", icon: Landmark },
-  { label: "Transit", icon: Train },
-  { label: "Parking", icon: ParkingCircle },
-  { label: "Pharmacies", icon: Pill },
-  { label: "ATMs", icon: Car }
+const nearbyScenicSpots = [
+  {
+    name: "Wargal Saraswati Temple",
+    category: "Religious",
+    highlight: "Hilltop temple with peaceful vibes",
+    distance: "6.4 km (~13 mins)",
+    icon: Landmark
+  },
+  {
+    name: "Kondapochamma Sagar Reservoir",
+    category: "Reservoir/Scenic",
+    highlight: "Sunset views and long dam walks",
+    distance: "12.2 km (~20 mins)",
+    icon: Waves
+  },
+  {
+    name: "Shamirpet Lake",
+    category: "Nature/Lake",
+    highlight: "Rocky shoreline and picnic spots",
+    distance: "23.7 km (~28 mins)",
+    icon: Droplet
+  }
 ];
 
 const highlights = [
@@ -37,11 +55,78 @@ const highlights = [
 ];
 
 export const HomePage = () => {
+  const [walkthroughImages, setWalkthroughImages] = useState<WalkthroughAsset[]>(galleryImages);
+  const [secondaryImages, setSecondaryImages] = useState<WalkthroughAsset[]>(galleryImages);
+  const [heroImages, setHeroImages] = useState<WalkthroughAsset[]>([]);
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  useEffect(() => {
+    const unsubscribe = subscribeWalkthroughImages((items) => {
+      if (!items.length) {
+        setWalkthroughImages(galleryImages);
+        return;
+      }
+      setWalkthroughImages(
+        items.map((item) => ({
+          src: item.url,
+          alt: item.caption || "Farmhouse walkthrough image",
+          caption: item.caption
+        }))
+      );
+    });
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = subscribeSecondaryImages((items) => {
+      if (!items.length) {
+        setSecondaryImages(galleryImages);
+        return;
+      }
+      setSecondaryImages(
+        items.map((item) => ({
+          src: item.url,
+          alt: item.caption || "Farmhouse gallery image",
+          caption: item.caption
+        }))
+      );
+    });
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = subscribeHeroImages((items) => {
+      setHeroImages(
+        items.map((item) => ({
+          src: item.url,
+          alt: item.caption || "Kanvera Farms hero image",
+          caption: item.caption
+        }))
+      );
+    });
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    setActiveIndex(0);
+  }, [walkthroughImages.length]);
+
+  useEffect(() => {
+    if (walkthroughImages.length < 2) return undefined;
+    const intervalId = window.setInterval(() => {
+      setActiveIndex((current) => (current + 1) % walkthroughImages.length);
+    }, 6000);
+    return () => window.clearInterval(intervalId);
+  }, [walkthroughImages.length]);
+
+  const heroAsset = useMemo(() => heroImages[0] ?? heroImage, [heroImages]);
+  const activeAsset = walkthroughImages[activeIndex];
+
   return (
     <div className="bg-forest-50">
       <section className="relative min-h-[88vh] overflow-hidden">
         <div className="absolute inset-0">
-          <img src={heroImage.src} alt={heroImage.alt} className="h-full w-full object-cover" />
+          <img src={heroAsset.src} alt={heroAsset.alt} className="h-full w-full object-cover" />
           <div className="absolute inset-0 bg-hero-gradient" />
         </div>
 
@@ -163,12 +248,70 @@ export const HomePage = () => {
       <section className="section-padding pt-0">
         <div className="mb-8 flex items-end justify-between">
           <div>
-            <p className="text-sm uppercase tracking-[0.2em] text-forest-500">Photos</p>
-            <h2 className="font-display text-3xl text-forest-900">Inside {siteConfig.brand.name}</h2>
+            <p className="text-sm uppercase tracking-[0.2em] text-forest-500">Walkthrough</p>
+            <h2 className="font-display text-3xl text-forest-900">A guided look around {siteConfig.brand.name}</h2>
+          </div>
+        </div>
+        {activeAsset && (
+          <div className="space-y-4">
+            <div className="overflow-hidden rounded-3xl border border-forest-100 bg-white">
+              <img
+                src={activeAsset.src}
+                alt={activeAsset.alt}
+                className="h-[420px] w-full object-cover md:h-[520px]"
+              />
+            </div>
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <p className="text-sm text-forest-600">
+                {activeAsset.caption || "Explore the farmhouse spaces, lawns, and gathering spots."}
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setActiveIndex((current) =>
+                      current === 0 ? walkthroughImages.length - 1 : current - 1
+                    )
+                  }
+                  className="rounded-full border border-forest-200 px-4 py-2 text-xs font-semibold text-forest-700"
+                >
+                  Previous
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveIndex((current) => (current + 1) % walkthroughImages.length)}
+                  className="rounded-full bg-forest-700 px-4 py-2 text-xs font-semibold text-white"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {walkthroughImages.map((image, index) => (
+                <button
+                  key={image.src}
+                  type="button"
+                  onClick={() => setActiveIndex(index)}
+                  className={`h-2.5 w-2.5 rounded-full transition ${
+                    index === activeIndex ? "bg-forest-700" : "bg-forest-200"
+                  }`}
+                  aria-label={`Go to slide ${index + 1}`}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+      </section>
+
+      <section className="section-padding pt-0">
+        <div className="mb-8 flex items-end justify-between">
+          <div>
+            <p className="text-sm uppercase tracking-[0.2em] text-forest-500">Gallery</p>
+            <h2 className="font-display text-3xl text-forest-900">More scenes from the property</h2>
           </div>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {galleryImages.map((image) => (
+          {secondaryImages.map((image) => (
             <div key={image.src} className="overflow-hidden rounded-3xl border border-forest-100 bg-white">
               <img
                 src={image.src}
@@ -182,13 +325,20 @@ export const HomePage = () => {
 
       <section className="section-padding pt-0">
         <div className="rounded-3xl border border-forest-100 bg-white/90 p-6 md:p-10">
-          <p className="text-sm uppercase tracking-[0.2em] text-forest-500">Nearby</p>
-          <h2 className="mt-2 font-display text-3xl text-forest-900">Everything you need is close by.</h2>
-          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {nearbyCategories.map((item) => (
-              <div key={item.label} className="rounded-2xl border border-forest-100 bg-forest-50 p-4">
-                <item.icon className="h-5 w-5 text-forest-600" />
-                <p className="mt-2 text-sm font-medium text-forest-700">{item.label}</p>
+          <p className="text-sm uppercase tracking-[0.2em] text-forest-500">Nearby Scenic Spots</p>
+          <h2 className="mt-2 font-display text-3xl text-forest-900">Quick drives for peaceful day trips.</h2>
+          <div className="mt-6 grid gap-4 lg:grid-cols-3">
+            {nearbyScenicSpots.map((spot) => (
+              <div key={spot.name} className="rounded-2xl border border-forest-100 bg-forest-50 p-5">
+                <spot.icon className="h-5 w-5 text-forest-600" />
+                <div className="mt-3 space-y-2">
+                  <div>
+                    <p className="text-sm font-semibold text-forest-900">{spot.name}</p>
+                    <p className="text-xs uppercase tracking-[0.2em] text-forest-500">{spot.category}</p>
+                  </div>
+                  <p className="text-sm text-forest-600">{spot.highlight}</p>
+                  <p className="text-xs font-semibold text-forest-700">{spot.distance}</p>
+                </div>
               </div>
             ))}
           </div>

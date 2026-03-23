@@ -5,14 +5,15 @@ import { RoomGallery } from "../components/rooms/RoomGallery";
 import { AvailabilityCalendar } from "../components/booking/AvailabilityCalendar";
 import { Skeleton } from "../components/shared/Skeleton";
 import { demoRooms } from "../data/rooms";
-import { fetchBlockedDatesByRoom, fetchBookingsByRoom } from "../lib/firestore";
-import { BlockedDateRange, Booking } from "../lib/types";
+import { fetchBlockedDatesByRoom, fetchBookingsByRoom, subscribeRoomImages } from "../lib/firestore";
+import { BlockedDateRange, Booking, WalkthroughImage } from "../lib/types";
 
 export const RoomDetailPage = () => {
   const { roomId } = useParams();
   const room = useMemo(() => demoRooms.find((item) => item.id === roomId), [roomId]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [blockedDates, setBlockedDates] = useState<BlockedDateRange[]>([]);
+  const [roomImages, setRoomImages] = useState<WalkthroughImage[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -30,6 +31,22 @@ export const RoomDetailPage = () => {
     loadAvailability();
   }, [roomId]);
 
+  useEffect(() => {
+    const unsubscribe = subscribeRoomImages(setRoomImages);
+    return () => unsubscribe();
+  }, []);
+
+  const galleryImages = useMemo(() => {
+    if (!room || !roomImages.length) return room?.images ?? [];
+    const roomIndex = Math.max(0, demoRooms.findIndex((item) => item.id === room.id));
+    const total = roomImages.length;
+    return [
+      roomImages[roomIndex % total].url,
+      roomImages[(roomIndex + 1) % total].url,
+      roomImages[(roomIndex + 2) % total].url
+    ];
+  }, [room, roomImages]);
+
   if (!room) {
     return <div className="section-padding">Room not found.</div>;
   }
@@ -42,7 +59,7 @@ export const RoomDetailPage = () => {
             <p className="text-sm uppercase tracking-[0.2em] text-forest-500">{room.name}</p>
             <h1 className="mt-2 font-display text-4xl text-forest-900">{room.description}</h1>
           </div>
-          <RoomGallery images={room.images} />
+          <RoomGallery images={galleryImages} />
           <div>
             <h2 className="font-display text-2xl text-forest-900">Amenities</h2>
             <AmenityList amenities={room.amenities} />
