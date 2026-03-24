@@ -121,9 +121,6 @@ export const subscribeHeroImages = (onChange: (images: WalkthroughImage[]) => vo
 export const subscribeSecondaryImages = (onChange: (images: WalkthroughImage[]) => void) =>
   subscribeMediaByCategory("secondary", onChange, "createdAt", "desc");
 
-export const subscribeRoomImages = (onChange: (images: WalkthroughImage[]) => void) =>
-  subscribeMediaByCategory("rooms", onChange, "createdAt", "desc");
-
 export const createWalkthroughImage = async (payload: Omit<WalkthroughImage, "id" | "createdAt">) => {
   const docRef = await addDoc(walkthroughImagesCollection, {
     ...payload,

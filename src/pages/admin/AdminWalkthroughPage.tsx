@@ -38,7 +38,6 @@ export const AdminWalkthroughPage = () => {
   const retentionByCategory: Record<MediaCategory, number> = {
     hero: 2,
     walkthrough: 8,
-    rooms: 8,
     secondary: 5
   };
 
@@ -124,7 +123,7 @@ export const AdminWalkthroughPage = () => {
       <AdminHeader
         eyebrow="Media Library"
         title="Manage farmhouse imagery"
-        description="Upload images and tag them as hero, walkthrough, rooms, or secondary."
+        description="Upload images and tag them as hero, walkthrough, or secondary."
       />
 
       <Card>
@@ -157,7 +156,6 @@ export const AdminWalkthroughPage = () => {
             >
               <option value="hero">Hero</option>
               <option value="walkthrough">Walkthrough</option>
-              <option value="rooms">Rooms</option>
               <option value="secondary">Secondary</option>
             </select>
           </label>

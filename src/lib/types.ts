@@ -32,7 +32,7 @@ export type BlockedDateRange = {
   reason: string;
 };
 
-export type MediaCategory = "hero" | "walkthrough" | "rooms" | "secondary";
+export type MediaCategory = "hero" | "walkthrough" | "secondary";
 
 export type WalkthroughImage = {
   id: string;
