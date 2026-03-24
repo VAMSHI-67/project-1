@@ -2,8 +2,10 @@ import { useMemo, useState } from "react";
 import { AlertCircle, CheckCircle2, Clock3, MessageCircle } from "lucide-react";
 import { Card } from "../components/shared/Card";
 import { siteConfig, whatsappBookingLink } from "../data/site";
+import { createBooking } from "../lib/firestore";
 
 const HOURS_12 = 12 * 60 * 60 * 1000;
+const WHOLE_PROPERTY_ROOM_ID = "whole-property";
 
 const formatDateTime = (value: string) => {
   if (!value) return "";
@@ -24,6 +26,7 @@ export const BookingPage = () => {
   const [checkOutTime, setCheckOutTime] = useState("11:00");
   const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const buildDateTime = (date: string, time: string) => {
     if (!date || !time) return "";
@@ -43,7 +46,7 @@ export const BookingPage = () => {
     return { hours, days, diff };
   }, [checkInDate, checkInTime, checkOutDate, checkOutTime]);
 
-  const sendToWhatsApp = () => {
+  const sendToWhatsApp = async () => {
     setError(null);
 
     const checkIn = buildDateTime(checkInDate, checkInTime);
@@ -57,6 +60,25 @@ export const BookingPage = () => {
     if (!duration || duration.diff < HOURS_12) {
       setError("Minimum booking duration is 12 hours for the whole farmstay.");
       return;
+    }
+
+    setSubmitting(true);
+    try {
+      await createBooking({
+        roomId: WHOLE_PROPERTY_ROOM_ID,
+        guestName: guestName.trim(),
+        email: "",
+        phone: phone.trim(),
+        guests,
+        checkInDate: checkIn,
+        checkOutDate: checkOut,
+        status: "pending",
+        ...(notes.trim() ? { notes: notes.trim() } : {})
+      });
+    } catch (bookingError) {
+      console.error("Optional booking sync failed", bookingError);
+    } finally {
+      setSubmitting(false);
     }
 
     const bookingMessage = [
@@ -183,9 +205,10 @@ export const BookingPage = () => {
           <button
             type="button"
             onClick={sendToWhatsApp}
+            disabled={submitting}
             className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-forest-700 via-forest-600 to-forest-500 px-5 py-3 text-sm font-semibold text-white shadow-glow transition hover:scale-[1.02]"
           >
-            <MessageCircle className="h-4 w-4" /> Continue Booking on WhatsApp
+            <MessageCircle className="h-4 w-4" /> {submitting ? "Preparing booking..." : "Continue Booking on WhatsApp"}
           </button>
         </Card>
 

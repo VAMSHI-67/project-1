@@ -11,6 +11,7 @@ import {
 } from "../../lib/firestore";
 import { deleteWalkthroughAsset, uploadWalkthroughImage } from "../../lib/storage";
 import { MediaCategory, WalkthroughImage } from "../../lib/types";
+import { AdminHeader } from "../../components/admin/AdminHeader";
 
 export const AdminWalkthroughPage = () => {
   const [images, setImages] = useState<WalkthroughImage[]>([]);
@@ -120,13 +121,11 @@ export const AdminWalkthroughPage = () => {
 
   return (
     <div className="section-padding space-y-8">
-      <div>
-        <p className="text-sm uppercase tracking-[0.2em] text-forest-500">Media Library</p>
-        <h1 className="mt-3 font-display text-4xl text-forest-900">Manage farmhouse imagery</h1>
-        <p className="mt-3 max-w-2xl text-forest-600">
-          Upload images and tag them as hero, walkthrough, rooms, or secondary.
-        </p>
-      </div>
+      <AdminHeader
+        eyebrow="Media Library"
+        title="Manage farmhouse imagery"
+        description="Upload images and tag them as hero, walkthrough, rooms, or secondary."
+      />
 
       <Card>
         <h2 className="font-display text-2xl text-forest-900">Upload new image</h2>

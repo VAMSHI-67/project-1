@@ -3,6 +3,7 @@ import { CalendarGrid } from "../../components/admin/CalendarGrid";
 import { DateBlockForm, DateBlockValues } from "../../components/admin/DateBlockForm";
 import { createBlockedDates, subscribeBlockedDates, subscribeBookings, subscribeRooms } from "../../lib/firestore";
 import { BlockedDateRange, Booking, Room } from "../../lib/types";
+import { AdminHeader } from "../../components/admin/AdminHeader";
 
 export const AdminCalendarPage = () => {
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -30,10 +31,7 @@ export const AdminCalendarPage = () => {
 
   return (
     <div className="section-padding">
-      <div className="mb-8">
-        <p className="text-sm uppercase tracking-[0.2em] text-forest-500">Calendar</p>
-        <h1 className="mt-3 font-display text-4xl text-forest-900">Block dates & manage availability</h1>
-      </div>
+      <AdminHeader eyebrow="Calendar" title="Block dates & manage availability" />
       <div className="grid gap-8 lg:grid-cols-[1fr_1.2fr]">
         <div className="glass-card rounded-3xl p-6">
           <h2 className="font-display text-xl text-forest-900">Block dates</h2>

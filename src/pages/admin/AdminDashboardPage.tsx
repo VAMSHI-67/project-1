@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { subscribeBookings, subscribeRooms } from "../../lib/firestore";
 import { Booking, Room } from "../../lib/types";
 import { addDays, differenceInCalendarDays, max, min, parseISO, startOfDay } from "date-fns";
+import { AdminHeader } from "../../components/admin/AdminHeader";
 
 const StatCard = ({ icon, label, value }: { icon: React.ReactNode; label: string; value: number }) => {
   const [display, setDisplay] = useState(0);
@@ -69,18 +70,18 @@ export const AdminDashboardPage = () => {
 
   return (
     <div className="section-padding">
-      <div className="mb-10 flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <p className="text-sm uppercase tracking-[0.2em] text-forest-500">Dashboard</p>
-          <h1 className="mt-3 font-display text-4xl text-forest-900">Welcome back, host.</h1>
-        </div>
-        <Link
-          to="/admin/walkthrough"
-          className="rounded-full bg-gradient-to-r from-forest-700 via-forest-600 to-forest-500 px-5 py-3 text-sm font-semibold text-white shadow-glow"
-        >
-          Upload walkthrough images
-        </Link>
-      </div>
+      <AdminHeader
+        eyebrow="Dashboard"
+        title="Welcome back, host."
+        action={
+          <Link
+            to="/admin/walkthrough"
+            className="rounded-full bg-gradient-to-r from-forest-700 via-forest-600 to-forest-500 px-5 py-3 text-sm font-semibold text-white shadow-glow"
+          >
+            Upload walkthrough images
+          </Link>
+        }
+      />
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <StatCard icon={<Users className="h-5 w-5" />} label="Total bookings" value={bookings.length} />
         <StatCard icon={<CalendarCheck className="h-5 w-5" />} label="Upcoming stays" value={upcoming.length} />

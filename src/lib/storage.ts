@@ -39,5 +39,24 @@ export const uploadWalkthroughImage = async (
 };
 
 export const deleteWalkthroughAsset = async (_storagePath: string) => {
-  // Cloudinary deletions require signed API calls; no-op for unsigned uploads.
+  const response = await fetch("/api/cloudinary-delete", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ publicId: _storagePath })
+  });
+
+  if (!response.ok) {
+    let message = "Delete failed. Please try again.";
+    try {
+      const data = (await response.json()) as { error?: string };
+      if (data.error) {
+        message = data.error;
+      }
+    } catch {
+      // Fall back to the generic message if the response body is not JSON.
+    }
+    throw new Error(message);
+  }
 };

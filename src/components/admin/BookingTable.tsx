@@ -11,6 +11,12 @@ export const BookingTable = ({
   onStatusChange: (bookingId: string, status: BookingStatus) => void;
 }) => {
   const roomMap = Object.fromEntries(rooms.map((room) => [room.id, room]));
+  const getRoomLabel = (roomId: string) => {
+    if (roomId === "whole-property") {
+      return "Whole property";
+    }
+    return roomMap[roomId]?.name ?? "-";
+  };
 
   return (
     <div className="overflow-hidden rounded-3xl border border-forest-100 bg-white/80">
@@ -29,7 +35,7 @@ export const BookingTable = ({
           {bookings.map((booking) => (
             <tr key={booking.id} className="border-t border-forest-100">
               <td className="p-4 font-medium text-forest-900">{booking.guestName}</td>
-              <td className="p-4">{roomMap[booking.roomId]?.name ?? "-"}</td>
+              <td className="p-4">{getRoomLabel(booking.roomId)}</td>
               <td className="p-4">
                 {booking.checkInDate} → {booking.checkOutDate}
               </td>
