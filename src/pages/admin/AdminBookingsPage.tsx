@@ -18,6 +18,10 @@ export const AdminBookingsPage = () => {
   }, []);
 
   const handleStatusChange = async (bookingId: string, status: BookingStatus) => {
+    const booking = bookings.find((item) => item.id === bookingId);
+    if (!booking || booking.status !== "pending") {
+      return;
+    }
     await updateBookingStatus(bookingId, status);
     setBookings((prev) => prev.map((booking) => (booking.id === bookingId ? { ...booking, status } : booking)));
   };

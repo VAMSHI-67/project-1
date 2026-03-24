@@ -1,6 +1,8 @@
 import { Booking, BookingStatus, Room } from "../../lib/types";
 import { Button } from "../shared/Button";
 
+const isFinalizedStatus = (status: BookingStatus) => status === "confirmed" || status === "canceled";
+
 export const BookingTable = ({
   bookings,
   rooms,
@@ -46,18 +48,26 @@ export const BookingTable = ({
                 </span>
               </td>
               <td className="p-4 flex flex-wrap gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => onStatusChange(booking.id, "confirmed")}
-                >
-                  Confirm
-                </Button>
-                <Button
-                  variant="ghost"
-                  onClick={() => onStatusChange(booking.id, "canceled")}
-                >
-                  Cancel
-                </Button>
+                {booking.status === "pending" ? (
+                  <>
+                    <Button
+                      variant="outline"
+                      onClick={() => onStatusChange(booking.id, "confirmed")}
+                    >
+                      Confirm
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      onClick={() => onStatusChange(booking.id, "canceled")}
+                    >
+                      Cancel
+                    </Button>
+                  </>
+                ) : (
+                  <span className="text-xs font-medium text-forest-500">
+                    {isFinalizedStatus(booking.status) ? "Finalized" : "No actions"}
+                  </span>
+                )}
               </td>
             </tr>
           ))}
