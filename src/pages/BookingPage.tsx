@@ -1,8 +1,9 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AlertCircle, CheckCircle2, Clock3, MessageCircle } from "lucide-react";
 import { Card } from "../components/shared/Card";
 import { siteConfig, whatsappBookingLink } from "../data/site";
-import { createBooking } from "../lib/firestore";
+import { createBooking, subscribeActiveVenues } from "../lib/firestore";
+import { Venue } from "../lib/types";
 
 const HOURS_12 = 12 * 60 * 60 * 1000;
 const WHOLE_PROPERTY_ROOM_ID = "whole-property";
@@ -17,9 +18,11 @@ const formatDateTime = (value: string) => {
 };
 
 export const BookingPage = () => {
+  const [venues, setVenues] = useState<Venue[]>([]);
   const [guestName, setGuestName] = useState("");
   const [phone, setPhone] = useState("");
   const [guests, setGuests] = useState(16);
+  const [selectedVenueId, setSelectedVenueId] = useState("");
   const [checkInDate, setCheckInDate] = useState("");
   const [checkInTime, setCheckInTime] = useState("12:00");
   const [checkOutDate, setCheckOutDate] = useState("");
@@ -27,6 +30,21 @@ export const BookingPage = () => {
   const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = subscribeActiveVenues(setVenues);
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (!venues.length) {
+      setSelectedVenueId("");
+      return;
+    }
+    if (!selectedVenueId || !venues.some((venue) => venue.id === selectedVenueId)) {
+      setSelectedVenueId(venues[0].id);
+    }
+  }, [selectedVenueId, venues]);
 
   const buildDateTime = (date: string, time: string) => {
     if (!date || !time) return "";
@@ -46,6 +64,8 @@ export const BookingPage = () => {
     return { hours, days, diff };
   }, [checkInDate, checkInTime, checkOutDate, checkOutTime]);
 
+  const selectedVenue = venues.find((venue) => venue.id === selectedVenueId);
+
   const sendToWhatsApp = async () => {
     setError(null);
 
@@ -57,8 +77,13 @@ export const BookingPage = () => {
       return;
     }
 
+    if (!selectedVenue) {
+      setError("Please choose which Kanvera venue you want to book.");
+      return;
+    }
+
     if (!duration || duration.diff < HOURS_12) {
-      setError("Minimum booking duration is 12 hours for the whole farmstay.");
+      setError("Minimum booking duration is 12 hours for Kanvera bookings.");
       return;
     }
 
@@ -66,6 +91,8 @@ export const BookingPage = () => {
     try {
       await createBooking({
         roomId: WHOLE_PROPERTY_ROOM_ID,
+        venueId: selectedVenue.id,
+        venueName: selectedVenue.name,
         guestName: guestName.trim(),
         email: "",
         phone: phone.trim(),
@@ -82,7 +109,9 @@ export const BookingPage = () => {
     }
 
     const bookingMessage = [
-      "Hi Kanvera Farms, I would like to book the whole farmstay.",
+      "Hi Kanvera Resort and Convention, I would like to make a booking.",
+      `Venue: ${selectedVenue.name}`,
+      selectedVenue.purpose ? `Purpose: ${selectedVenue.purpose}` : null,
       `Name: ${guestName}`,
       `Phone: ${phone}`,
       `Guests: ${guests}`,
@@ -104,11 +133,11 @@ export const BookingPage = () => {
   return (
     <div className="section-padding">
       <div className="mb-10">
-        <p className="text-sm uppercase tracking-[0.2em] text-forest-500">Whole Property Booking</p>
-        <h1 className="mt-3 font-display text-4xl text-forest-900">Book the entire Kanvera Farms stay.</h1>
+        <p className="text-sm uppercase tracking-[0.2em] text-forest-500">Venue Booking</p>
+        <h1 className="mt-3 font-display text-4xl text-forest-900">Book your preferred Kanvera venue.</h1>
         <p className="mt-3 max-w-2xl text-forest-600">
-          This is an exclusive full-property booking. Minimum duration is <strong>12 hours</strong>, and bookings can
-          be extended to multiple days.
+          Choose the space you want within the Kanvera property and share your preferred timing. Minimum booking
+          duration is <strong>12 hours</strong>.
         </p>
       </div>
 
@@ -116,10 +145,29 @@ export const BookingPage = () => {
         <Card>
           <h2 className="font-display text-2xl text-forest-900">Booking Details</h2>
           <p className="mt-2 text-sm text-forest-600">
-            Share your preferred schedule and we will continue confirmation on WhatsApp.
+            Select your venue, share your schedule, and we will continue confirmation on WhatsApp.
           </p>
 
           <div className="mt-6 grid gap-4 md:grid-cols-2">
+            <label className="space-y-2 text-sm font-medium text-forest-700 md:col-span-2">
+              Which Kanvera venue would you like to book?
+              <select
+                value={selectedVenueId}
+                onChange={(event) => setSelectedVenueId(event.target.value)}
+                className="w-full rounded-xl border border-forest-100 bg-white/80 px-4 py-3"
+              >
+                {!venues.length ? (
+                  <option value="">No venues available yet</option>
+                ) : (
+                  venues.map((venue) => (
+                    <option key={venue.id} value={venue.id}>
+                      {venue.name}
+                    </option>
+                  ))
+                )}
+              </select>
+              {selectedVenue?.purpose && <span className="block text-xs text-forest-500">{selectedVenue.purpose}</span>}
+            </label>
             <label className="space-y-2 text-sm font-medium text-forest-700">
               Full Name
               <input
@@ -205,8 +253,8 @@ export const BookingPage = () => {
           <button
             type="button"
             onClick={sendToWhatsApp}
-            disabled={submitting}
-            className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-forest-700 via-forest-600 to-forest-500 px-5 py-3 text-sm font-semibold text-white shadow-glow transition hover:scale-[1.02]"
+            disabled={submitting || !venues.length}
+            className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-forest-700 via-forest-600 to-forest-500 px-5 py-3 text-sm font-semibold text-white shadow-glow transition hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-70"
           >
             <MessageCircle className="h-4 w-4" /> {submitting ? "Preparing booking..." : "Continue Booking on WhatsApp"}
           </button>
@@ -218,7 +266,7 @@ export const BookingPage = () => {
             <p className="inline-flex items-center gap-2 font-semibold text-forest-900">
               <Clock3 className="h-4 w-4" /> Minimum duration: 12 hours
             </p>
-            <p className="mt-2">After 12 hours, you can extend your booking to full-day or multiple-day stays.</p>
+            <p className="mt-2">You can select the venue that fits your stay, celebration, or event requirement.</p>
           </div>
 
           {duration && duration.diff >= HOURS_12 && (
@@ -237,8 +285,15 @@ export const BookingPage = () => {
             <p className="mt-1">{siteConfig.contact.phoneDisplay}</p>
             <p className="mt-1">{siteConfig.contact.address}</p>
           </div>
+
+          {!venues.length && (
+            <div className="rounded-2xl bg-amber-50 p-4 text-sm text-amber-800">
+              Venue options will appear here after the admin creates them in the media library.
+            </div>
+          )}
         </Card>
       </div>
     </div>
   );
 };
+

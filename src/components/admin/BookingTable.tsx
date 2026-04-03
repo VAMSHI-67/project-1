@@ -26,6 +26,7 @@ export const BookingTable = ({
         <thead className="bg-forest-100/60 text-forest-700">
           <tr>
             <th className="p-4">Guest</th>
+            <th className="p-4">Venue</th>
             <th className="p-4">Room</th>
             <th className="p-4">Dates</th>
             <th className="p-4">Guests</th>
@@ -37,9 +38,10 @@ export const BookingTable = ({
           {bookings.map((booking) => (
             <tr key={booking.id} className="border-t border-forest-100">
               <td className="p-4 font-medium text-forest-900">{booking.guestName}</td>
+              <td className="p-4">{booking.venueName ?? "-"}</td>
               <td className="p-4">{getRoomLabel(booking.roomId)}</td>
               <td className="p-4">
-                {booking.checkInDate} → {booking.checkOutDate}
+                {booking.checkInDate} to {booking.checkOutDate}
               </td>
               <td className="p-4">{booking.guests}</td>
               <td className="p-4">
@@ -47,19 +49,13 @@ export const BookingTable = ({
                   {booking.status}
                 </span>
               </td>
-              <td className="p-4 flex flex-wrap gap-2">
+              <td className="flex flex-wrap gap-2 p-4">
                 {booking.status === "pending" ? (
                   <>
-                    <Button
-                      variant="outline"
-                      onClick={() => onStatusChange(booking.id, "confirmed")}
-                    >
+                    <Button variant="outline" onClick={() => onStatusChange(booking.id, "confirmed")}>
                       Confirm
                     </Button>
-                    <Button
-                      variant="ghost"
-                      onClick={() => onStatusChange(booking.id, "canceled")}
-                    >
+                    <Button variant="ghost" onClick={() => onStatusChange(booking.id, "canceled")}>
                       Cancel
                     </Button>
                   </>

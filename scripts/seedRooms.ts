@@ -1,3 +1,4 @@
+import process from "node:process";
 import { initializeApp } from "firebase/app";
 import { collection, doc, setDoc } from "firebase/firestore";
 import { getFirestore } from "firebase/firestore";
@@ -18,7 +19,7 @@ const db = getFirestore(app);
 const run = async () => {
   const roomsRef = collection(db, "rooms");
   await Promise.all(
-    demoRooms.map((room) =>
+    demoRooms.map((room: (typeof demoRooms)[number]) =>
       setDoc(doc(roomsRef, room.id), {
         name: room.name,
         description: room.description,

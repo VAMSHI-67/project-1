@@ -1,19 +1,21 @@
-import { Leaf, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
+import logoImage from "../../assets/branding/kanvera-logo-green.png";
+import { Instagram, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import { siteConfig, whatsappBookingLink } from "../../data/site";
 
 export const Footer = () => (
   <footer className="bg-forest-900 text-forest-50">
     <div className="section-padding grid gap-10 md:grid-cols-3">
       <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <Leaf className="h-6 w-6 text-gold-300" />
-          <div>
-            <p className="font-display text-lg">{siteConfig.brand.name}</p>
-            <p className="text-xs text-forest-200">{siteConfig.brand.localName}</p>
-          </div>
+        <div className="inline-flex w-fit rounded-3xl bg-white/95 p-3 shadow-glow">
+          <img
+            src={logoImage}
+            alt="Kanvera Resort and Convention logo"
+            className="h-auto w-[220px] object-contain md:w-[240px]"
+          />
         </div>
         <p className="text-sm text-forest-100">
-          Nature-filled full-property farmstay getaways for families, friends, and celebrations.
+          A destination for nature stays, private celebrations, family gatherings, and convention experiences across one
+          beautiful Kanvera property.
         </p>
       </div>
       <div className="space-y-3 text-sm">
@@ -28,8 +30,16 @@ export const Footer = () => (
         </div>
         <div className="flex items-center gap-2">
           <Mail className="h-4 w-4 text-gold-300" />
-          <span>kanverafarms@gmail.com</span>
+          <span>{siteConfig.contact.email}</span>
         </div>
+        <a
+          href={siteConfig.contact.instagramUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center gap-2 text-forest-100 hover:text-white"
+        >
+          <Instagram className="h-4 w-4 text-gold-300" /> {siteConfig.contact.instagramHandle}
+        </a>
       </div>
       <div className="space-y-3 text-sm">
         <h3 className="font-semibold text-forest-50">Quick Actions</h3>
@@ -49,6 +59,14 @@ export const Footer = () => (
         >
           <MessageCircle className="h-4 w-4" /> WhatsApp Booking
         </a>
+        <a
+          href={siteConfig.contact.instagramUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-forest-50 hover:bg-white/20"
+        >
+          <Instagram className="h-4 w-4" /> Instagram
+        </a>
         <p className="text-forest-200">Google rating snapshot: 4.4 stars (263 reviews)</p>
       </div>
     </div>
@@ -57,3 +75,4 @@ export const Footer = () => (
     </div>
   </footer>
 );
+

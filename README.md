@@ -1,13 +1,14 @@
-# Kanvera Farms Website
+# Kanvera Resort & Convention Website
 
-A static marketing and booking website for Kanvera Farms built with React, TypeScript, Tailwind CSS, and Framer Motion.
+A static marketing and booking website for Kanvera Resort & Convention built with React, TypeScript, Tailwind CSS, and Framer Motion.
 
 ## Overview
 
 - Public pages only: `/`, `/booking`, `/contact`
-- WhatsApp-first whole-property booking flow
+- WhatsApp-first venue booking flow
 - Shared site config for brand, contact details, maps, and gallery content
 - Vercel-friendly static deployment target
+- Detailed buyer/admin documentation is available in `docs/HANDOVER_GUIDE.md`
 
 ## Tech Stack
 
@@ -45,11 +46,11 @@ VITE_CLOUDINARY_CLOUD_NAME=your_cloud_name
 VITE_CLOUDINARY_UPLOAD_PRESET=your_unsigned_preset
 ```
 
-## Firebase Rules (Walkthrough Uploads)
+## Firebase Rules
 
-This repo includes a baseline Firestore rule template in `firestore.rules`.
+This repo includes Firestore rules in `firestore.rules`.
 
-1. Replace `YOUR_ADMIN_EMAIL` in the file with the same email used in `VITE_ADMIN_EMAIL`.
+1. Make sure the admin email in the rules matches the email used in `VITE_ADMIN_EMAIL`.
 2. Deploy rules in the Firebase console or via Firebase CLI.
 
 ## Production Build
@@ -73,12 +74,12 @@ Recommended production settings:
 
 ## Booking Flow
 
-Kanvera Farms uses a WhatsApp-first booking model.
+Kanvera Resort & Convention uses a WhatsApp-first venue booking model.
 
-- Guests submit whole-property stay details on `/booking`
+- Guests submit venue booking details on `/booking`
 - Minimum booking duration is 12 hours
 - Booking CTA opens WhatsApp for `+91 89092 39999`
 
 ## Content Source
 
-Branding, contact details, map link, WhatsApp number, and gallery content are centralized in `src/data/site.ts`.
+Branding, contact details, map link, WhatsApp number, and fallback gallery content are centralized in `src/data/site.ts`.

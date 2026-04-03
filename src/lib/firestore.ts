@@ -13,12 +13,31 @@ import {
   writeBatch
 } from "firebase/firestore";
 import { db } from "./firebase";
-import { BlockedDateRange, Booking, BookingStatus, MediaCategory, Room, WalkthroughImage } from "./types";
+import {
+  BlockedDateRange,
+  Booking,
+  BookingStatus,
+  MediaCategory,
+  Room,
+  Venue,
+  WalkthroughImage
+} from "./types";
 
 export const roomsCollection = collection(db, "rooms");
 export const bookingsCollection = collection(db, "bookings");
 export const blockedDatesCollection = collection(db, "blockedDates");
 export const walkthroughImagesCollection = collection(db, "walkthroughImages");
+export const venuesCollection = collection(db, "venues");
+
+const slugify = (value: string) =>
+  value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "") || "venue";
+
+const sortByCreatedAt = <T extends { createdAt?: number }>(items: T[]) =>
+  [...items].sort((a, b) => (a.createdAt ?? 0) - (b.createdAt ?? 0));
 
 export const fetchRooms = async (): Promise<Room[]> => {
   const snapshot = await getDocs(roomsCollection);
@@ -46,6 +65,62 @@ export const subscribeRooms = (onChange: (rooms: Room[]) => void) =>
     const data = snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...(docSnap.data() as Omit<Room, "id">) }));
     onChange(data);
   });
+
+export const subscribeVenues = (onChange: (venues: Venue[]) => void) =>
+  onSnapshot(venuesCollection, (snapshot) => {
+    const data = sortByCreatedAt(
+      snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...(docSnap.data() as Omit<Venue, "id">) }))
+    );
+    onChange(data);
+  });
+
+export const subscribeActiveVenues = (onChange: (venues: Venue[]) => void) =>
+  subscribeVenues((venues) => onChange(venues.filter((venue) => venue.isActive !== false)));
+
+export const createVenue = async ({ name, purpose, isActive = true }: Omit<Venue, "id" | "slug" | "createdAt">) => {
+  const trimmedName = name.trim();
+  const trimmedPurpose = purpose?.trim();
+  const docRef = await addDoc(venuesCollection, {
+    name: trimmedName,
+    slug: slugify(trimmedName),
+    isActive,
+    createdAt: Date.now(),
+    ...(trimmedPurpose ? { purpose: trimmedPurpose } : {})
+  });
+  return docRef.id;
+};
+
+export const updateVenue = async (
+  venueId: string,
+  payload: Partial<Pick<Venue, "name" | "purpose" | "isActive">>
+) => {
+  const updates: Record<string, unknown> = {};
+
+  if (typeof payload.name === "string") {
+    const trimmedName = payload.name.trim();
+    updates.name = trimmedName;
+    updates.slug = slugify(trimmedName);
+  }
+
+  if (payload.purpose !== undefined) {
+    const trimmedPurpose = payload.purpose?.trim();
+    updates.purpose = trimmedPurpose || null;
+  }
+
+  if (typeof payload.isActive === "boolean") {
+    updates.isActive = payload.isActive;
+  }
+
+  await updateDoc(doc(venuesCollection, venueId), updates);
+};
+
+export const deleteVenue = async (venueId: string) => {
+  const linkedImages = await getDocs(query(walkthroughImagesCollection, where("venueId", "==", venueId)));
+  if (!linkedImages.empty) {
+    throw new Error("Delete or reassign this venue's secondary images before deleting the venue.");
+  }
+  await deleteDoc(doc(venuesCollection, venueId));
+};
 
 export const subscribeBlockedDates = (onChange: (blocked: BlockedDateRange[]) => void) =>
   onSnapshot(blockedDatesCollection, (snapshot) => {
@@ -103,8 +178,8 @@ export const subscribeMediaByCategory = (
         ...(docSnap.data() as Omit<WalkthroughImage, "id">)
       }));
       const sorted = [...data].sort((a, b) => {
-        const aValue = orderField === "order" ? a.order : (a.createdAt as number);
-        const bValue = orderField === "order" ? b.order : (b.createdAt as number);
+        const aValue = orderField === "order" ? a.order : Number(a.createdAt ?? 0);
+        const bValue = orderField === "order" ? b.order : Number(b.createdAt ?? 0);
         if (aValue === bValue) return 0;
         return orderDirection === "asc" ? aValue - bValue : bValue - aValue;
       });
@@ -144,24 +219,27 @@ export const deleteWalkthroughImage = async (imageId: string) => {
 export const cleanupMediaCategory = async (
   category: MediaCategory,
   keepCount: number,
-  preserveIds: string[] = []
+  preserveIds: string[] = [],
+  venueId?: string
 ) => {
   const orderField = category === "walkthrough" ? "order" : "createdAt";
   const orderDirection = category === "walkthrough" ? "asc" : "desc";
   const snapshot = await getDocs(query(walkthroughImagesCollection, where("category", "==", category)));
   if (snapshot.empty) return [] as WalkthroughImage[];
 
-  const sorted = snapshot.docs
+  const scopedItems = snapshot.docs
     .map((docSnap) => ({
       id: docSnap.id,
       data: docSnap.data() as Omit<WalkthroughImage, "id">
     }))
-    .sort((a, b) => {
-      const aValue = orderField === "order" ? a.data.order : (a.data.createdAt as number);
-      const bValue = orderField === "order" ? b.data.order : (b.data.createdAt as number);
-      if (aValue === bValue) return 0;
-      return orderDirection === "asc" ? aValue - bValue : bValue - aValue;
-    });
+    .filter((item) => (category === "secondary" && venueId ? item.data.venueId === venueId : true));
+
+  const sorted = scopedItems.sort((a, b) => {
+    const aValue = orderField === "order" ? a.data.order : Number(a.data.createdAt ?? 0);
+    const bValue = orderField === "order" ? b.data.order : Number(b.data.createdAt ?? 0);
+    if (aValue === bValue) return 0;
+    return orderDirection === "asc" ? aValue - bValue : bValue - aValue;
+  });
 
   const deletions = sorted
     .map((item, index) => ({ ...item, index }))

@@ -1,22 +1,25 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import {
-  ArrowRight,
-  Landmark,
-  MapPinned,
-  MessageCircle,
-  Droplet,
-  Waves
-} from "lucide-react";
+import { ArrowRight, Landmark, MapPinned, MessageCircle, Droplet, Waves } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Card } from "../components/shared/Card";
 import { galleryImages, heroImage, siteConfig, whatsappBookingLink } from "../data/site";
-import { subscribeHeroImages, subscribeSecondaryImages, subscribeWalkthroughImages } from "../lib/firestore";
+import {
+  subscribeActiveVenues,
+  subscribeHeroImages,
+  subscribeSecondaryImages,
+  subscribeWalkthroughImages
+} from "../lib/firestore";
+import { Venue } from "../lib/types";
 
 type WalkthroughAsset = {
   src: string;
   alt: string;
   caption?: string;
+};
+
+type SecondaryAsset = WalkthroughAsset & {
+  venueId?: string;
 };
 
 const fadeUp = {
@@ -55,10 +58,16 @@ const highlights = [
 ];
 
 export const HomePage = () => {
+  const [venues, setVenues] = useState<Venue[]>([]);
   const [walkthroughImages, setWalkthroughImages] = useState<WalkthroughAsset[]>(galleryImages);
-  const [secondaryImages, setSecondaryImages] = useState<WalkthroughAsset[]>(galleryImages);
+  const [secondaryImages, setSecondaryImages] = useState<SecondaryAsset[]>([]);
   const [heroImages, setHeroImages] = useState<WalkthroughAsset[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
+
+  useEffect(() => {
+    const unsubscribe = subscribeActiveVenues(setVenues);
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     const unsubscribe = subscribeWalkthroughImages((items) => {
@@ -69,7 +78,7 @@ export const HomePage = () => {
       setWalkthroughImages(
         items.map((item) => ({
           src: item.url,
-          alt: item.caption || "Farmhouse walkthrough image",
+          alt: item.caption || "Kanvera property walkthrough image",
           caption: item.caption
         }))
       );
@@ -79,15 +88,12 @@ export const HomePage = () => {
 
   useEffect(() => {
     const unsubscribe = subscribeSecondaryImages((items) => {
-      if (!items.length) {
-        setSecondaryImages(galleryImages);
-        return;
-      }
       setSecondaryImages(
         items.map((item) => ({
           src: item.url,
-          alt: item.caption || "Farmhouse gallery image",
-          caption: item.caption
+          alt: item.caption || "Venue gallery image",
+          caption: item.caption,
+          venueId: item.venueId
         }))
       );
     });
@@ -99,7 +105,7 @@ export const HomePage = () => {
       setHeroImages(
         items.map((item) => ({
           src: item.url,
-          alt: item.caption || "Kanvera Farms hero image",
+          alt: item.caption || "Kanvera Resort and Convention hero image",
           caption: item.caption
         }))
       );
@@ -122,6 +128,33 @@ export const HomePage = () => {
   const heroAsset = useMemo(() => heroImages[0] ?? heroImage, [heroImages]);
   const activeAsset = walkthroughImages[activeIndex];
 
+  const secondarySections = useMemo(() => {
+    if (!secondaryImages.length) {
+      return [] as { id: string; title: string; purpose?: string; images: SecondaryAsset[] }[];
+    }
+
+    const venueMap = new Map(venues.map((venue) => [venue.id, venue]));
+    const groups = new Map<string, { id: string; title: string; purpose?: string; images: SecondaryAsset[] }>();
+
+    secondaryImages.forEach((image) => {
+      const venue = image.venueId ? venueMap.get(image.venueId) : undefined;
+      const key = venue?.id ?? "general";
+      const existing = groups.get(key);
+      if (existing) {
+        existing.images.push(image);
+        return;
+      }
+      groups.set(key, {
+        id: key,
+        title: venue?.name ?? "More from Kanvera",
+        purpose: venue?.purpose,
+        images: [image]
+      });
+    });
+
+    return Array.from(groups.values());
+  }, [secondaryImages, venues]);
+
   return (
     <div className="bg-forest-50">
       <section className="relative min-h-[88vh] overflow-hidden">
@@ -136,7 +169,7 @@ export const HomePage = () => {
             animate={{ opacity: 1, y: 0 }}
             className="mb-4 text-sm uppercase tracking-[0.3em] text-gold-200"
           >
-            Full Property Farmstay Booking
+            Venue Booking Across One Private Property
           </motion.p>
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
@@ -152,8 +185,8 @@ export const HomePage = () => {
             transition={{ delay: 0.2 }}
             className="mt-6 max-w-2xl text-base text-forest-100"
           >
-            Book the entire farmstay for your family trips, group hangouts, or special celebrations. Minimum
-            duration starts at 12 hours, and you can extend to multi-day stays.
+            Explore stay spaces, celebration zones, and event-ready corners across the Kanvera property, then choose the
+            venue that fits your plan.
           </motion.p>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -193,8 +226,8 @@ export const HomePage = () => {
               <p className="text-lg font-semibold text-white">263+ guests</p>
             </div>
             <div>
-              <p className="text-xs uppercase tracking-widest text-forest-100">Booking Style</p>
-              <p className="text-lg font-semibold text-white">Whole Farmstay</p>
+              <p className="text-xs uppercase tracking-widest text-forest-100">Venue Types</p>
+              <p className="text-lg font-semibold text-white">Stay, events, conventions</p>
             </div>
             <div>
               <p className="text-xs uppercase tracking-widest text-forest-100">Minimum Duration</p>
@@ -215,11 +248,11 @@ export const HomePage = () => {
           <div className="space-y-6">
             <p className="text-sm uppercase tracking-[0.2em] text-forest-500">About {siteConfig.brand.name}</p>
             <h2 className="font-display text-3xl text-forest-900">
-              Peaceful greenery, cozy stay zones, poolside fun, and open lawns for unforgettable weekends.
+              Peaceful greenery, cozy stay zones, event corners, and open lawns for unforgettable gatherings.
             </h2>
             <p className="text-forest-600">
-              Located near Gowraram, {siteConfig.brand.name} is designed for group stays where everyone can relax,
-              celebrate, and reconnect with nature in one private property.
+              Located near Gowraram, {siteConfig.brand.name} spans a large private property where each venue serves a
+              different purpose while staying part of one shared property experience.
             </p>
             <div className="space-y-3">
               {highlights.map((highlight) => (
@@ -263,7 +296,7 @@ export const HomePage = () => {
             </div>
             <div className="flex flex-wrap items-center justify-between gap-4">
               <p className="text-sm text-forest-600">
-                {activeAsset.caption || "Explore the farmhouse spaces, lawns, and gathering spots."}
+                {activeAsset.caption || "Explore the stay zones, lawns, and gathering spaces across the Kanvera property."}
               </p>
               <div className="flex items-center gap-2">
                 <button
@@ -303,24 +336,38 @@ export const HomePage = () => {
         )}
       </section>
 
-      <section className="section-padding pt-0">
-        <div className="mb-8 flex items-end justify-between">
+      <section className="section-padding pt-0 space-y-10">
+        <div className="mb-2 flex items-end justify-between">
           <div>
             <p className="text-sm uppercase tracking-[0.2em] text-forest-500">Gallery</p>
-            <h2 className="font-display text-3xl text-forest-900">More scenes from the property</h2>
+            <h2 className="font-display text-3xl text-forest-900">Browse the property by venue</h2>
           </div>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {secondaryImages.map((image) => (
-            <div key={image.src} className="overflow-hidden rounded-3xl border border-forest-100 bg-white">
-              <img
-                src={image.src}
-                alt={image.alt}
-                className="h-56 w-full object-cover transition duration-500 hover:scale-105"
-              />
+        {secondarySections.length > 0 ? (
+          secondarySections.map((section) => (
+            <div key={section.id} className="space-y-4">
+              <div>
+                <h3 className="font-display text-2xl text-forest-900">{section.title}</h3>
+                {section.purpose && <p className="mt-1 text-sm text-forest-600">{section.purpose}</p>}
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {section.images.map((image) => (
+                  <div key={`${section.id}-${image.src}`} className="overflow-hidden rounded-3xl border border-forest-100 bg-white">
+                    <img
+                      src={image.src}
+                      alt={image.alt}
+                      className="h-56 w-full object-cover transition duration-500 hover:scale-105"
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
-          ))}
-        </div>
+          ))
+        ) : (
+          <Card className="border border-forest-100 bg-white/80 py-6 text-center text-forest-600">
+            Venue-specific gallery images will appear here once they are uploaded from the admin media library.
+          </Card>
+        )}
       </section>
 
       <section className="section-padding pt-0">
@@ -347,3 +394,4 @@ export const HomePage = () => {
     </div>
   );
 };
+

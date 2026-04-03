@@ -1,14 +1,16 @@
 {
-  "name": "greennest-farm-stay",
+  "name": "kanvera-resort-convention",
   "private": true,
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
+    "dev": "node scripts/run-vite.mjs dev",
+    "build": "node scripts/run-vite.mjs build",
+    "preview": "node scripts/run-vite.mjs preview",
     "lint": "eslint .",
-    "seed:rooms": "tsx scripts/seedRooms.ts"
+    "typecheck": "tsc --noEmit",
+    "seed:rooms": "tsx scripts/seedRooms.ts",
+    "deploy:rules": "firebase deploy --only firestore:rules"
   },
   "dependencies": {
     "@headlessui/react": "^2.0.4",
@@ -43,3 +45,4 @@
     "vite": "^5.2.12"
   }
 }
+

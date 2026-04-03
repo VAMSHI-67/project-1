@@ -1,5 +1,4 @@
-import React from "react";
-import { motion } from "framer-motion";
+import { HTMLMotionProps, motion } from "framer-motion";
 import { clsx } from "clsx";
 
 const buttonVariants = {
@@ -8,7 +7,7 @@ const buttonVariants = {
   tap: { scale: 0.98 }
 };
 
-type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
+type ButtonProps = HTMLMotionProps<"button"> & {
   variant?: "primary" | "ghost" | "outline";
 };
 

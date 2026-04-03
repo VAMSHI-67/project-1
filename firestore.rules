@@ -12,6 +12,11 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
+    match /venues/{venueId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     match /rooms/{roomId} {
       allow read: if true;
       allow write: if isAdmin();

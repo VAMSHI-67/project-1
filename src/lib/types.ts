@@ -13,6 +13,8 @@ export type BookingStatus = "pending" | "confirmed" | "canceled";
 export type Booking = {
   id: string;
   roomId: string;
+  venueId?: string;
+  venueName?: string;
   guestName: string;
   email: string;
   phone: string;
@@ -34,6 +36,15 @@ export type BlockedDateRange = {
 
 export type MediaCategory = "hero" | "walkthrough" | "secondary";
 
+export type Venue = {
+  id: string;
+  name: string;
+  slug: string;
+  purpose?: string;
+  isActive: boolean;
+  createdAt: number;
+};
+
 export type WalkthroughImage = {
   id: string;
   url: string;
@@ -42,4 +53,5 @@ export type WalkthroughImage = {
   storagePath: string;
   createdAt: string;
   category: MediaCategory;
+  venueId?: string;
 };

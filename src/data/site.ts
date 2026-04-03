@@ -7,13 +7,16 @@ import galleryImage6 from "../assets/images/k6.jpg";
 
 export const siteConfig = {
   brand: {
-    name: "Kanvera Farms",
-    localName: "కన్వేర ఫార్మ్స్",
-    tagline: "Private farmstay escapes in the heart of Telangana"
+    name: "Kanvera Resort & Convention",
+    localName: "Celebrate Amidst Nature's Luxury",
+    tagline: "Luxury stays, celebrations, and convention experiences in the heart of Telangana"
   },
   contact: {
     phoneDisplay: "+91 89092 39999",
     phoneRaw: "918909239999",
+    email: "kanverafarms@gmail.com",
+    instagramUrl: "https://www.instagram.com/kanvera_resort?igsh=Y201cGVwdHl4Yzlw",
+    instagramHandle: "@kanvera_resort",
     address:
       "SH1, beside Janatha Hotel, near Gouraram Police Station, Gowraram, Wargal, Telangana 502279",
     plusCode: "QM65+X6 Gowraram, Telangana",
@@ -26,28 +29,28 @@ export const whatsappBookingLink = `https://wa.me/${siteConfig.contact.phoneRaw}
 
 export const heroImage = {
   src: heroImageSrc,
-  alt: "Kanvera Farms courtyard and stay wing"
+  alt: "Kanvera Resort and Convention courtyard and stay wing"
 };
 
 export const galleryImages = [
   {
     src: galleryImage2,
-    alt: "Kanvera Farms garden walkway"
+    alt: "Kanvera Resort and Convention garden walkway"
   },
   {
     src: galleryImage3,
-    alt: "Kanvera Farms stay wing"
+    alt: "Kanvera Resort and Convention stay wing"
   },
   {
     src: galleryImage4,
-    alt: "Kanvera Farms seating area"
+    alt: "Kanvera Resort and Convention seating area"
   },
   {
     src: galleryImage5,
-    alt: "Kanvera Farms outdoor lounge"
+    alt: "Kanvera Resort and Convention outdoor lounge"
   },
   {
     src: galleryImage6,
-    alt: "Kanvera Farms property view"
+    alt: "Kanvera Resort and Convention property view"
   }
 ];

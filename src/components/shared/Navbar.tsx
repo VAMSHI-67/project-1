@@ -1,5 +1,6 @@
+﻿import logoImage from "../../assets/branding/kanvera-logo-green.png";
 import { Link, NavLink } from "react-router-dom";
-import { Leaf, MessageCircle, Menu } from "lucide-react";
+import { MessageCircle, Menu } from "lucide-react";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { siteConfig, whatsappBookingLink } from "../../data/site";
@@ -16,9 +17,13 @@ export const Navbar = () => {
   return (
     <header className="sticky top-0 z-40 border-b border-forest-100 bg-forest-50/85 backdrop-blur-lg">
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-        <Link to="/" className="flex items-center gap-2 text-forest-800">
-          <Leaf className="h-6 w-6 text-forest-600" />
-          <div>
+        <Link to="/" className="flex items-center gap-3 text-forest-800">
+          <img
+            src={logoImage}
+            alt="Kanvera Resort and Convention logo"
+            className="h-12 w-auto object-contain md:h-14"
+          />
+          <div className="hidden sm:block">
             <p className="font-display text-lg leading-tight">{siteConfig.brand.name}</p>
             <p className="text-[10px] uppercase tracking-[0.22em] text-forest-500">{siteConfig.brand.localName}</p>
           </div>
