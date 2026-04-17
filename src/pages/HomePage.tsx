@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, Landmark, MapPinned, MessageCircle, Droplet, Waves } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Card } from "../components/shared/Card";
@@ -202,8 +202,7 @@ export const HomePage = () => {
   }, [walkthroughImages.length]);
 
   const heroAsset = useMemo(
-    () =>
-      heroImages[0] ?? buildResponsiveAsset(heroImage.src, heroImage.alt, undefined, "hero"),
+    () => heroImages[0] ?? buildResponsiveAsset(heroImage.src, heroImage.alt, undefined, "hero"),
     [heroImages]
   );
   const activeAsset = walkthroughImages[activeIndex];
@@ -346,7 +345,7 @@ export const HomePage = () => {
             <div className="space-y-3">
               {highlights.map((highlight) => (
                 <Card key={highlight} className="border border-forest-100 bg-white/80 py-4">
-                  <p className="text-sm text-forest-700">"{highlight}"</p>
+                  <p className="text-sm text-forest-700">\"{highlight}\"</p>
                 </Card>
               ))}
             </div>
@@ -376,21 +375,26 @@ export const HomePage = () => {
         </div>
         {activeAsset && (
           <div className="space-y-4">
-            <div className="overflow-hidden rounded-[2rem] border border-forest-200/80 bg-white shadow-[0_24px_60px_rgba(15,44,34,0.12)]">
-              <div className="relative flex min-h-[420px] items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(212,175,55,0.16),_transparent_38%),linear-gradient(135deg,rgba(245,249,246,1),rgba(255,255,255,0.98),rgba(246,239,221,0.72))] px-8 py-6 md:min-h-[520px] md:px-12">
-                <div className="pointer-events-none absolute inset-y-8 left-6 w-px bg-gradient-to-b from-transparent via-forest-200/80 to-transparent md:left-8" />
-                <div className="pointer-events-none absolute inset-y-8 right-6 w-px bg-gradient-to-b from-transparent via-forest-200/80 to-transparent md:right-8" />
-                <div className="pointer-events-none absolute inset-x-10 top-6 h-px bg-gradient-to-r from-transparent via-gold-200/80 to-transparent md:inset-x-16" />
-                <div className="pointer-events-none absolute inset-x-10 bottom-6 h-px bg-gradient-to-r from-transparent via-gold-200/70 to-transparent md:inset-x-16" />
-                <img
-                  src={activeAsset.displaySrc}
-                  srcSet={activeAsset.srcSet}
-                  sizes={activeAsset.sizes}
-                  alt={activeAsset.alt}
-                  loading="eager"
-                  decoding="async"
-                  className="relative z-10 max-h-[420px] w-full object-contain drop-shadow-[0_18px_35px_rgba(15,44,34,0.14)] md:max-h-[520px]"
-                />
+            <div className="relative overflow-hidden rounded-[2rem] border border-forest-100 bg-forest-900 shadow-[0_28px_70px_rgba(15,44,34,0.22)]">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(212,175,55,0.18),_transparent_30%),linear-gradient(180deg,rgba(8,27,20,0.08),rgba(8,27,20,0.38))]" />
+              <div className="relative h-[420px] md:h-[520px]">
+                <AnimatePresence mode="wait">
+                  <motion.img
+                    key={activeAsset.src}
+                    src={activeAsset.displaySrc}
+                    srcSet={activeAsset.srcSet}
+                    sizes={activeAsset.sizes}
+                    alt={activeAsset.alt}
+                    loading="eager"
+                    decoding="async"
+                    initial={{ opacity: 0, scale: 1.04 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.98 }}
+                    transition={{ duration: 0.55, ease: "easeOut" }}
+                    className="absolute inset-0 h-full w-full object-cover"
+                  />
+                </AnimatePresence>
+                <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-forest-950/70 via-forest-950/20 to-transparent" />
               </div>
             </div>
             <div className="flex flex-wrap items-center justify-between gap-4">
