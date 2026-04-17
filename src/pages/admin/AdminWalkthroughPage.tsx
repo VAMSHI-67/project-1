@@ -14,7 +14,7 @@ import {
   updateVenue,
   updateWalkthroughOrder
 } from "../../lib/firestore";
-import { deleteWalkthroughAsset, uploadWalkthroughImage } from "../../lib/storage";
+import { deleteWalkthroughAsset, getCloudinaryImageUrl, uploadWalkthroughImage } from "../../lib/storage";
 import { MediaCategory, Venue, WalkthroughImage } from "../../lib/types";
 
 export const AdminWalkthroughPage = () => {
@@ -391,7 +391,7 @@ export const AdminWalkthroughPage = () => {
       <div className="grid gap-4 lg:grid-cols-2">
         {images.map((image, index) => (
           <div key={image.id} className="glass-card overflow-hidden rounded-3xl">
-            <img src={image.url} alt={image.caption || "Walkthrough image"} className="h-56 w-full object-cover" />
+            <img src={category === "secondary" ? getCloudinaryImageUrl(image.url, { width: 900, crop: "limit", quality: "auto", format: "auto" }) : image.url} alt={image.caption || "Walkthrough image"} loading="lazy" decoding="async" className={category === "secondary" ? "h-56 w-full object-contain bg-forest-50 p-2" : "h-56 w-full object-cover"} />
             <div className="space-y-3 p-4">
               <div>
                 <p className="text-xs uppercase tracking-[0.2em] text-forest-500">Order {image.order}</p>

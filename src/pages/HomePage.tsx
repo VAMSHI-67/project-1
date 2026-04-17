@@ -10,21 +10,89 @@ import {
   subscribeSecondaryImages,
   subscribeWalkthroughImages
 } from "../lib/firestore";
+import { getCloudinaryImageUrl } from "../lib/storage";
 import { Venue } from "../lib/types";
 
-type WalkthroughAsset = {
+type ImageAsset = {
   src: string;
+  displaySrc: string;
   alt: string;
   caption?: string;
+  srcSet?: string;
+  sizes?: string;
 };
 
-type SecondaryAsset = WalkthroughAsset & {
+type SecondaryAsset = ImageAsset & {
   venueId?: string;
+};
+
+type GalleryVariant = "hero" | "walkthrough" | "secondary";
+
+type VariantConfig = {
+  widths: number[];
+  displayWidth: number;
+  sizes: string;
 };
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
   visible: { opacity: 1, y: 0 }
+};
+
+const imageConfigs: Record<GalleryVariant, VariantConfig> = {
+  hero: {
+    widths: [960, 1440, 1920, 2560],
+    displayWidth: 2560,
+    sizes: "100vw"
+  },
+  walkthrough: {
+    widths: [768, 1024, 1440, 1800],
+    displayWidth: 1800,
+    sizes: "100vw"
+  },
+  secondary: {
+    widths: [480, 768, 1200],
+    displayWidth: 1200,
+    sizes: "(min-width: 1024px) 30vw, (min-width: 640px) 48vw, 92vw"
+  }
+};
+
+const buildResponsiveAsset = (
+  src: string,
+  alt: string,
+  caption: string | undefined,
+  variant: GalleryVariant
+): ImageAsset => {
+  const config = imageConfigs[variant];
+  const isCloudinaryAsset = src.includes("/upload/");
+
+  if (!isCloudinaryAsset) {
+    return {
+      src,
+      displaySrc: src,
+      alt,
+      caption
+    };
+  }
+
+  return {
+    src,
+    displaySrc: getCloudinaryImageUrl(src, {
+      width: config.displayWidth,
+      crop: "limit",
+      quality: "auto",
+      format: "auto"
+    }),
+    srcSet: config.widths
+      .map(
+        (width) =>
+          `${getCloudinaryImageUrl(src, { width, crop: "limit", quality: "auto", format: "auto" })} ${width}w`
+      )
+      .join(", "),
+    sizes: config.sizes,
+    alt,
+    caption
+  };
 };
 
 const nearbyScenicSpots = [
@@ -59,9 +127,11 @@ const highlights = [
 
 export const HomePage = () => {
   const [venues, setVenues] = useState<Venue[]>([]);
-  const [walkthroughImages, setWalkthroughImages] = useState<WalkthroughAsset[]>(galleryImages);
+  const [walkthroughImages, setWalkthroughImages] = useState<ImageAsset[]>(
+    galleryImages.map((image) => buildResponsiveAsset(image.src, image.alt, undefined, "walkthrough"))
+  );
   const [secondaryImages, setSecondaryImages] = useState<SecondaryAsset[]>([]);
-  const [heroImages, setHeroImages] = useState<WalkthroughAsset[]>([]);
+  const [heroImages, setHeroImages] = useState<ImageAsset[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
 
   useEffect(() => {
@@ -72,15 +142,20 @@ export const HomePage = () => {
   useEffect(() => {
     const unsubscribe = subscribeWalkthroughImages((items) => {
       if (!items.length) {
-        setWalkthroughImages(galleryImages);
+        setWalkthroughImages(
+          galleryImages.map((image) => buildResponsiveAsset(image.src, image.alt, undefined, "walkthrough"))
+        );
         return;
       }
       setWalkthroughImages(
-        items.map((item) => ({
-          src: item.url,
-          alt: item.caption || "Kanvera property walkthrough image",
-          caption: item.caption
-        }))
+        items.map((item) =>
+          buildResponsiveAsset(
+            item.url,
+            item.caption || "Kanvera property walkthrough image",
+            item.caption,
+            "walkthrough"
+          )
+        )
       );
     });
     return () => unsubscribe();
@@ -90,9 +165,7 @@ export const HomePage = () => {
     const unsubscribe = subscribeSecondaryImages((items) => {
       setSecondaryImages(
         items.map((item) => ({
-          src: item.url,
-          alt: item.caption || "Venue gallery image",
-          caption: item.caption,
+          ...buildResponsiveAsset(item.url, item.caption || "Venue gallery image", item.caption, "secondary"),
           venueId: item.venueId
         }))
       );
@@ -103,11 +176,14 @@ export const HomePage = () => {
   useEffect(() => {
     const unsubscribe = subscribeHeroImages((items) => {
       setHeroImages(
-        items.map((item) => ({
-          src: item.url,
-          alt: item.caption || "Kanvera Resort and Convention hero image",
-          caption: item.caption
-        }))
+        items.map((item) =>
+          buildResponsiveAsset(
+            item.url,
+            item.caption || "Kanvera Resort and Convention hero image",
+            item.caption,
+            "hero"
+          )
+        )
       );
     });
     return () => unsubscribe();
@@ -125,7 +201,11 @@ export const HomePage = () => {
     return () => window.clearInterval(intervalId);
   }, [walkthroughImages.length]);
 
-  const heroAsset = useMemo(() => heroImages[0] ?? heroImage, [heroImages]);
+  const heroAsset = useMemo(
+    () =>
+      heroImages[0] ?? buildResponsiveAsset(heroImage.src, heroImage.alt, undefined, "hero"),
+    [heroImages]
+  );
   const activeAsset = walkthroughImages[activeIndex];
 
   const secondarySections = useMemo(() => {
@@ -159,7 +239,16 @@ export const HomePage = () => {
     <div className="bg-forest-50">
       <section className="relative min-h-[88vh] overflow-hidden">
         <div className="absolute inset-0">
-          <img src={heroAsset.src} alt={heroAsset.alt} className="h-full w-full object-cover" />
+          <img
+            src={heroAsset.displaySrc}
+            srcSet={heroAsset.srcSet}
+            sizes={heroAsset.sizes}
+            alt={heroAsset.alt}
+            loading="eager"
+            fetchPriority="high"
+            decoding="async"
+            className="h-full w-full object-cover"
+          />
           <div className="absolute inset-0 bg-hero-gradient" />
         </div>
 
@@ -287,12 +376,22 @@ export const HomePage = () => {
         </div>
         {activeAsset && (
           <div className="space-y-4">
-            <div className="overflow-hidden rounded-3xl border border-forest-100 bg-white">
-              <img
-                src={activeAsset.src}
-                alt={activeAsset.alt}
-                className="h-[420px] w-full object-cover md:h-[520px]"
-              />
+            <div className="overflow-hidden rounded-[2rem] border border-forest-200/80 bg-white shadow-[0_24px_60px_rgba(15,44,34,0.12)]">
+              <div className="relative flex min-h-[420px] items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(212,175,55,0.16),_transparent_38%),linear-gradient(135deg,rgba(245,249,246,1),rgba(255,255,255,0.98),rgba(246,239,221,0.72))] px-8 py-6 md:min-h-[520px] md:px-12">
+                <div className="pointer-events-none absolute inset-y-8 left-6 w-px bg-gradient-to-b from-transparent via-forest-200/80 to-transparent md:left-8" />
+                <div className="pointer-events-none absolute inset-y-8 right-6 w-px bg-gradient-to-b from-transparent via-forest-200/80 to-transparent md:right-8" />
+                <div className="pointer-events-none absolute inset-x-10 top-6 h-px bg-gradient-to-r from-transparent via-gold-200/80 to-transparent md:inset-x-16" />
+                <div className="pointer-events-none absolute inset-x-10 bottom-6 h-px bg-gradient-to-r from-transparent via-gold-200/70 to-transparent md:inset-x-16" />
+                <img
+                  src={activeAsset.displaySrc}
+                  srcSet={activeAsset.srcSet}
+                  sizes={activeAsset.sizes}
+                  alt={activeAsset.alt}
+                  loading="eager"
+                  decoding="async"
+                  className="relative z-10 max-h-[420px] w-full object-contain drop-shadow-[0_18px_35px_rgba(15,44,34,0.14)] md:max-h-[520px]"
+                />
+              </div>
             </div>
             <div className="flex flex-wrap items-center justify-between gap-4">
               <p className="text-sm text-forest-600">
@@ -352,12 +451,22 @@ export const HomePage = () => {
               </div>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {section.images.map((image) => (
-                  <div key={`${section.id}-${image.src}`} className="overflow-hidden rounded-3xl border border-forest-100 bg-white">
-                    <img
-                      src={image.src}
-                      alt={image.alt}
-                      className="h-56 w-full object-cover transition duration-500 hover:scale-105"
-                    />
+                  <div
+                    key={`${section.id}-${image.src}`}
+                    className="group overflow-hidden rounded-3xl border border-forest-100 bg-white shadow-[0_18px_40px_rgba(15,44,34,0.08)]"
+                  >
+                    <div className="flex min-h-[16rem] items-center justify-center bg-gradient-to-br from-forest-50 via-white to-gold-50/40 p-3 sm:min-h-[18rem] lg:min-h-[20rem]">
+                      <img
+                        src={image.displaySrc}
+                        srcSet={image.srcSet}
+                        sizes={image.sizes}
+                        alt={image.alt}
+                        loading="lazy"
+                        decoding="async"
+                        className="max-h-[21rem] w-full object-contain transition duration-500 group-hover:scale-[1.02]"
+                      />
+                    </div>
+                    {image.caption && <p className="px-4 pb-4 text-sm text-forest-600">{image.caption}</p>}
                   </div>
                 ))}
               </div>
@@ -394,4 +503,3 @@ export const HomePage = () => {
     </div>
   );
 };
-

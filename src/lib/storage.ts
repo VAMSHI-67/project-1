@@ -1,6 +1,38 @@
 const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
 const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 
+type CloudinaryImageOptions = {
+  width?: number;
+  height?: number;
+  crop?: "fill" | "fit" | "limit" | "pad" | "scale";
+  quality?: string;
+  format?: string;
+};
+
+const CLOUDINARY_UPLOAD_SEGMENT = "/upload/";
+
+export const getCloudinaryImageUrl = (url: string, options: CloudinaryImageOptions = {}) => {
+  if (!url.includes(CLOUDINARY_UPLOAD_SEGMENT)) {
+    return url;
+  }
+
+  const transformations = [
+    options.crop ? `c_${options.crop}` : null,
+    typeof options.width === "number" ? `w_${options.width}` : null,
+    typeof options.height === "number" ? `h_${options.height}` : null,
+    options.quality ? `q_${options.quality}` : null,
+    options.format ? `f_${options.format}` : null
+  ]
+    .filter(Boolean)
+    .join(",");
+
+  if (!transformations) {
+    return url;
+  }
+
+  return url.replace(CLOUDINARY_UPLOAD_SEGMENT, `${CLOUDINARY_UPLOAD_SEGMENT}${transformations}/`);
+};
+
 export const uploadWalkthroughImage = async (
   file: File,
   onProgress?: (percent: number) => void
