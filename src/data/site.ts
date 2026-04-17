@@ -14,6 +14,8 @@ export const siteConfig = {
   contact: {
     phoneDisplay: "+91 89092 39999",
     phoneRaw: "918909239999",
+    alternatePhoneDisplay: "+91 73307 39239",
+    alternatePhoneRaw: "917330739239",
     email: "kanverafarms@gmail.com",
     instagramUrl: "https://www.instagram.com/kanvera_resort?igsh=Y201cGVwdHl4Yzlw",
     instagramHandle: "@kanvera_resort",
@@ -25,7 +27,7 @@ export const siteConfig = {
   }
 };
 
-export const whatsappBookingLink = `https://wa.me/${siteConfig.contact.phoneRaw}`;
+export const whatsappBookingLink = `https://api.whatsapp.com/send?phone=${siteConfig.contact.phoneRaw}`;
 
 export const heroImage = {
   src: heroImageSrc,

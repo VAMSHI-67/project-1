@@ -1,3 +1,4 @@
+import { Suspense, lazy } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { Navbar } from "./components/shared/Navbar";
@@ -7,11 +8,16 @@ import { AdminRouteGuard } from "./components/admin/AdminRouteGuard";
 import { HomePage } from "./pages/HomePage";
 import { BookingPage } from "./pages/BookingPage";
 import { ContactPage } from "./pages/ContactPage";
-import { AdminLoginPage } from "./pages/admin/AdminLoginPage";
-import { AdminDashboardPage } from "./pages/admin/AdminDashboardPage";
-import { AdminBookingsPage } from "./pages/admin/AdminBookingsPage";
-import { AdminCalendarPage } from "./pages/admin/AdminCalendarPage";
-import { AdminWalkthroughPage } from "./pages/admin/AdminWalkthroughPage";
+
+const AdminLoginPage = lazy(() => import("./pages/admin/AdminLoginPage").then((module) => ({ default: module.AdminLoginPage })));
+const AdminDashboardPage = lazy(() =>
+  import("./pages/admin/AdminDashboardPage").then((module) => ({ default: module.AdminDashboardPage }))
+);
+const AdminBookingsPage = lazy(() => import("./pages/admin/AdminBookingsPage").then((module) => ({ default: module.AdminBookingsPage })));
+const AdminCalendarPage = lazy(() => import("./pages/admin/AdminCalendarPage").then((module) => ({ default: module.AdminCalendarPage })));
+const AdminWalkthroughPage = lazy(() =>
+  import("./pages/admin/AdminWalkthroughPage").then((module) => ({ default: module.AdminWalkthroughPage }))
+);
 
 const pageVariants = {
   initial: { opacity: 0, y: 24 },
@@ -39,6 +45,8 @@ const PublicLayout = ({ children }: { children: React.ReactNode }) => (
     <QuickBookingWidget />
   </div>
 );
+
+const AdminPageFallback = () => <div className="section-padding">Loading admin page...</div>;
 
 const App = () => {
   const location = useLocation();
@@ -79,57 +87,69 @@ const App = () => {
         <Route
           path="/admin/login"
           element={
-            <PageWrapper>
-              <AdminLoginPage />
-            </PageWrapper>
+            <Suspense fallback={<AdminPageFallback />}>
+              <PageWrapper>
+                <AdminLoginPage />
+              </PageWrapper>
+            </Suspense>
           }
         />
         <Route
           path="/admin"
           element={
-            <PageWrapper>
-              <AdminLoginPage />
-            </PageWrapper>
+            <Suspense fallback={<AdminPageFallback />}>
+              <PageWrapper>
+                <AdminLoginPage />
+              </PageWrapper>
+            </Suspense>
           }
         />
         <Route
           path="/admin/dashboard"
           element={
-            <AdminRouteGuard>
-              <PageWrapper>
-                <AdminDashboardPage />
-              </PageWrapper>
-            </AdminRouteGuard>
+            <Suspense fallback={<AdminPageFallback />}>
+              <AdminRouteGuard>
+                <PageWrapper>
+                  <AdminDashboardPage />
+                </PageWrapper>
+              </AdminRouteGuard>
+            </Suspense>
           }
         />
         <Route
           path="/admin/bookings"
           element={
-            <AdminRouteGuard>
-              <PageWrapper>
-                <AdminBookingsPage />
-              </PageWrapper>
-            </AdminRouteGuard>
+            <Suspense fallback={<AdminPageFallback />}>
+              <AdminRouteGuard>
+                <PageWrapper>
+                  <AdminBookingsPage />
+                </PageWrapper>
+              </AdminRouteGuard>
+            </Suspense>
           }
         />
         <Route
           path="/admin/calendar"
           element={
-            <AdminRouteGuard>
-              <PageWrapper>
-                <AdminCalendarPage />
-              </PageWrapper>
-            </AdminRouteGuard>
+            <Suspense fallback={<AdminPageFallback />}>
+              <AdminRouteGuard>
+                <PageWrapper>
+                  <AdminCalendarPage />
+                </PageWrapper>
+              </AdminRouteGuard>
+            </Suspense>
           }
         />
         <Route
           path="/admin/walkthrough"
           element={
-            <AdminRouteGuard>
-              <PageWrapper>
-                <AdminWalkthroughPage />
-              </PageWrapper>
-            </AdminRouteGuard>
+            <Suspense fallback={<AdminPageFallback />}>
+              <AdminRouteGuard>
+                <PageWrapper>
+                  <AdminWalkthroughPage />
+                </PageWrapper>
+              </AdminRouteGuard>
+            </Suspense>
           }
         />
       </Routes>

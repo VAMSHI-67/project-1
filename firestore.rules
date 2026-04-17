@@ -2,9 +2,64 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    function isAdmin() {
+    function isBootstrapAdmin() {
       return request.auth != null
-        && request.auth.token.email == "vamshimaddikunta7095@gmail.com";
+        && request.auth.token.email == "kanveraresort@gmail.com";
+    }
+
+    function hasAdminRecord() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/adminUsers/$(request.auth.uid))
+        && get(/databases/$(database)/documents/adminUsers/$(request.auth.uid)).data.isActive == true;
+    }
+
+    function isAdmin() {
+      return isBootstrapAdmin() || hasAdminRecord();
+    }
+
+    function isNonEmptyString(value, maxLength) {
+      return value is string
+        && value.size() > 0
+        && value.size() <= maxLength;
+    }
+
+    function isOptionalString(value, maxLength) {
+      return !(value is string) || value.size() <= maxLength;
+    }
+
+    function isValidBookingCreate() {
+      return request.resource.data.keys().hasOnly([
+          "roomId",
+          "venueId",
+          "venueName",
+          "guestName",
+          "email",
+          "phone",
+          "guests",
+          "checkInDate",
+          "checkOutDate",
+          "status",
+          "createdAt",
+          "notes"
+        ])
+        && isNonEmptyString(request.resource.data.roomId, 80)
+        && isNonEmptyString(request.resource.data.venueId, 120)
+        && isNonEmptyString(request.resource.data.venueName, 120)
+        && isNonEmptyString(request.resource.data.guestName, 120)
+        && isOptionalString(request.resource.data.email, 160)
+        && isNonEmptyString(request.resource.data.phone, 40)
+        && request.resource.data.guests is int
+        && request.resource.data.guests > 0
+        && isNonEmptyString(request.resource.data.checkInDate, 80)
+        && isNonEmptyString(request.resource.data.checkOutDate, 80)
+        && request.resource.data.createdAt != null
+        && request.resource.data.status == "pending"
+        && isOptionalString(request.resource.data.notes, 1000);
+    }
+
+    match /adminUsers/{userId} {
+      allow read: if request.auth != null && (request.auth.uid == userId || isAdmin());
+      allow write: if isAdmin();
     }
 
     match /walkthroughImages/{imageId} {
@@ -23,8 +78,8 @@ service cloud.firestore {
     }
 
     match /bookings/{bookingId} {
-      allow read: if true;
-      allow write: if isAdmin();
+      allow create: if isValidBookingCreate() || isAdmin();
+      allow read, update, delete: if isAdmin();
     }
 
     match /blockedDates/{blockId} {

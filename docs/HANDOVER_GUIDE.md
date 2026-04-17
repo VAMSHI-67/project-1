@@ -489,9 +489,24 @@ This prevents confusion and ensures only secondary images are tied to venues.
 
 The project currently uses the following services.
 
+### Cloudflare Pages
+
+Used for:
+
+- frontend hosting
+- production and preview deployments
+- automatic build/deploy from GitHub commits
+- custom domain + SSL delivery
+
+Operational note:
+
+- frontend releases are published from Cloudflare Pages after code is updated in GitHub.
+
 ### Firebase Authentication
 
-Used for admin login.
+Used for:
+
+- admin login and session identity
 
 ### Firestore
 
@@ -502,14 +517,36 @@ Used for:
 - blocked dates
 - venue records
 - uploaded media records
+- adminUsers role records
+
+### Firestore Security Rules
+
+Used for:
+
+- protecting collections from unauthorized read/write
+- allowing controlled public booking create flow
+- restricting admin actions to authorized admins
+
+Operational note:
+
+- rule file changes require explicit Firebase rules deploy to become live.
 
 ### Cloudinary
 
-Used for image uploads and hosted image storage.
+Used for:
 
-### Vercel
+- image uploads from admin panel
+- optimized image delivery via CDN
+- media asset hosting for hero, walkthrough, and secondary galleries
 
-Used as the deployment target for the frontend site.
+### GitHub
+
+Used for:
+
+- source code repository
+- version history and rollback traceability
+- collaboration and branch/release workflow
+- deployment trigger source for Cloudflare Pages
 
 ## 9. Important Content Settings
 
@@ -530,6 +567,30 @@ Current live brand details include:
 - brand name: Kanvera Resort & Convention
 - email: kanverafarms@gmail.com
 - Instagram: @kanvera_resort
+
+## 9.1 Environment Variables Required in Hosting
+
+The hosting environment must provide these values for runtime configuration.
+
+Firebase:
+
+- `VITE_FIREBASE_API_KEY`
+- `VITE_FIREBASE_AUTH_DOMAIN`
+- `VITE_FIREBASE_PROJECT_ID`
+- `VITE_FIREBASE_STORAGE_BUCKET`
+- `VITE_FIREBASE_MESSAGING_SENDER_ID`
+- `VITE_FIREBASE_APP_ID`
+
+Admin bootstrap:
+
+- `VITE_ADMIN_EMAIL`
+
+Cloudinary:
+
+- `VITE_CLOUDINARY_CLOUD_NAME`
+- `VITE_CLOUDINARY_UPLOAD_PRESET`
+
+If these are missing or incorrect, login, data access, or media features can fail.
 
 ## 10. Current Business Logic
 
@@ -556,15 +617,44 @@ This does not change the project logic or the admin workflow, but it is worth no
 Before handing over to the buyer, make sure the following are complete:
 
 1. Admin login credentials are shared securely.
-2. Firebase project access is confirmed.
-3. Firestore rules are deployed.
-4. Cloudinary credentials are configured.
-5. At least one venue is created in admin.
-6. Hero images are uploaded.
-7. Walkthrough images are uploaded.
-8. Secondary images are uploaded for each important venue.
-9. A test booking is created and verified in admin.
-10. Contact details, Instagram, and map link are verified.
+2. Cloudflare Pages project access is confirmed.
+3. Domain DNS access in Cloudflare is confirmed.
+4. GitHub repository access is confirmed for buyer/maintainer.
+5. Firebase project access is confirmed.
+6. Firestore rules are deployed.
+7. Cloudinary credentials are configured.
+8. Hosting environment variables are set in Cloudflare Pages.
+9. At least one venue is created in admin.
+10. Hero images are uploaded.
+11. Walkthrough images are uploaded.
+12. Secondary images are uploaded for each important venue.
+13. A test booking is created and verified in admin.
+14. Contact details, Instagram, and map link are verified.
+
+## 12.1 Platform Responsibility Matrix (Client Friendly)
+
+Cloudflare Pages:
+
+- website hosting and public delivery
+- deployment pipeline from GitHub
+- domain routing and SSL
+
+Firebase:
+
+- admin login system
+- operational data (bookings, venues, calendar blocks, media records)
+- data access security rules
+
+Cloudinary:
+
+- media upload storage
+- image CDN delivery and optimization
+
+GitHub:
+
+- source code ownership
+- release/change history
+- collaboration workflow and deployment trigger source
 
 ## 13. Quick Operating Summary for the Buyer
 

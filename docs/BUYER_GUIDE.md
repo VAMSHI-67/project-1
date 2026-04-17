@@ -396,27 +396,98 @@ Main logo assets are stored in:
 - `src/assets/branding/`
 - `public/`
 
-## 23. Important Technical Notes
+## 23. Platform Guide (What Is Used for What)
 
-### Firestore
+This project runs on four core platforms.
+
+### Cloudflare Pages (Hosting and Deployment)
+Cloudflare Pages hosts the frontend website that visitors open.
+
 Used for:
-- bookings
-- venue sections
-- walkthrough images
-- hero images
-- secondary gallery images
-- blocked dates
+- production hosting of the React/Vite site
+- automatic deploys from GitHub
+- branch preview deploys before publishing to production
+- custom domain connection and SSL certificate management
 
-### Cloudinary
-Used for image uploads and storage.
+Client should know:
+- if code is merged to the production branch, Cloudflare can deploy automatically
+- DNS for the live domain should be managed in the same Cloudflare account used by Pages
+- build settings must stay aligned with the project (`npm run build`, output folder `dist`)
 
-### Firebase Rules
-Rules are deployed and protect the Firestore collections.
+### Firebase (Authentication + Database + Security Rules)
+Firebase handles secure admin access and operational data.
 
-### Vercel
-The project is prepared for Vercel deployment.
+Used for:
+- Firebase Authentication: admin login
+- Firestore Database: bookings, venues, media records, blocked dates, adminUsers
+- Firestore Security Rules: collection-level access controls
 
-## 24. Known Operational Note
+Client should know:
+- booking records are stored in Firestore, then the guest continues on WhatsApp
+- admin permissions are controlled through `adminUsers/{uid}` and the bootstrap admin email
+- any rules change in `firestore.rules` requires redeploy to Firebase to go live
+
+### Cloudinary (Image Upload and Delivery)
+Cloudinary stores and serves uploaded media.
+
+Used for:
+- admin image uploads (hero, walkthrough, secondary)
+- CDN delivery of optimized images to website visitors
+- transformation-based image URLs for responsive loading
+- delete cleanup via API route (`api/cloudinary-delete.js`)
+
+Client should know:
+- if Cloudinary credentials are missing, admin media upload will fail
+- Cloudinary account ownership is important for long-term continuity
+- usage/billing should be monitored in Cloudinary dashboard
+
+### GitHub (Source Code and Release History)
+GitHub is the source-of-truth for this project code.
+
+Used for:
+- source code repository
+- collaboration and change history
+- branch workflow and release control
+- trigger source for Cloudflare Pages deployments
+
+Client should know:
+- all production code changes should be committed to GitHub first
+- keep at least two maintainers with admin access to avoid lockout risk
+- repository access is required for any future feature or bug fix release
+
+## 24. Deployment Flow (Simple Version)
+
+1. Developer pushes or merges approved code to GitHub production branch.
+2. Cloudflare Pages detects the commit and runs a new deploy.
+3. Site is updated after successful build.
+4. If Firestore rules changed, run Firebase rules deploy separately.
+
+Important:
+- frontend deploy (Cloudflare) and rules deploy (Firebase) are separate operations.
+- both must be complete for security changes to be fully live.
+
+## 25. Environment Variables Required for Hosting
+
+The Cloudflare Pages project should have the required variables configured.
+
+Firebase variables:
+- `VITE_FIREBASE_API_KEY`
+- `VITE_FIREBASE_AUTH_DOMAIN`
+- `VITE_FIREBASE_PROJECT_ID`
+- `VITE_FIREBASE_STORAGE_BUCKET`
+- `VITE_FIREBASE_MESSAGING_SENDER_ID`
+- `VITE_FIREBASE_APP_ID`
+
+Admin bootstrap variable:
+- `VITE_ADMIN_EMAIL`
+
+Cloudinary variables:
+- `VITE_CLOUDINARY_CLOUD_NAME`
+- `VITE_CLOUDINARY_UPLOAD_PRESET`
+
+If any of these are missing or incorrect, affected features will fail at runtime.
+
+## 26. Known Operational Note
 
 On some Windows machines, `npm run dev` or `npm run build` may face a Vite/esbuild `spawn EPERM` environment issue.
 
@@ -424,7 +495,7 @@ This is an environment/tooling issue rather than a TypeScript code issue.
 
 TypeScript validation is passing successfully.
 
-## 25. Recommended Admin Workflow
+## 27. Recommended Admin Workflow
 
 For daily usage, the admin should usually follow this order:
 
@@ -435,7 +506,18 @@ For daily usage, the admin should usually follow this order:
 5. Review bookings regularly
 6. Use calendar blocking when dates need to be reserved
 
-## 26. Suggested Handover Message
+## 28. Client Ownership Checklist (Accounts and Access)
+
+Before final client handover, confirm all of the following are transferred and verified:
+
+1. Cloudflare account access (Pages project + domain DNS access).
+2. Firebase project access (Auth, Firestore, Rules deploy permission).
+3. Cloudinary account access (media library + upload preset management).
+4. GitHub repository access (admin/maintainer role).
+5. Production branch and deployment process explained to client.
+6. At least one backup owner/admin in each platform account.
+
+## 29. Suggested Handover Message
 
 This website is now set up as a venue-based booking system for one large Kanvera property.
 

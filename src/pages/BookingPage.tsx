@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { AlertCircle, CheckCircle2, Clock3, MessageCircle } from "lucide-react";
 import { Card } from "../components/shared/Card";
-import { siteConfig, whatsappBookingLink } from "../data/site";
+import { siteConfig } from "../data/site";
+import { openWhatsAppConversation } from "../lib/whatsapp";
 import { createBooking, subscribeActiveVenues } from "../lib/firestore";
 import { Venue } from "../lib/types";
 
@@ -103,9 +104,10 @@ export const BookingPage = () => {
         ...(notes.trim() ? { notes: notes.trim() } : {})
       });
     } catch (bookingError) {
-      console.error("Optional booking sync failed", bookingError);
-    } finally {
+      console.error("Booking sync failed", bookingError);
+      setError("We could not save your booking request right now. Please try again in a moment.");
       setSubmitting(false);
+      return;
     }
 
     const bookingMessage = [
@@ -123,11 +125,8 @@ export const BookingPage = () => {
       .filter(Boolean)
       .join("\n");
 
-    const whatsappUrl = `${whatsappBookingLink}?text=${encodeURIComponent(bookingMessage)}`;
-    const popup = window.open(whatsappUrl, "_blank", "noopener,noreferrer");
-    if (!popup) {
-      window.location.assign(whatsappUrl);
-    }
+    setSubmitting(false);
+    openWhatsAppConversation(bookingMessage);
   };
 
   return (
@@ -283,6 +282,7 @@ export const BookingPage = () => {
           <div className="rounded-2xl border border-forest-100 bg-white/80 p-4 text-sm text-forest-600">
             <p className="font-medium text-forest-900">Direct Contact</p>
             <p className="mt-1">{siteConfig.contact.phoneDisplay}</p>
+            <p className="mt-1">{siteConfig.contact.alternatePhoneDisplay}</p>
             <p className="mt-1">{siteConfig.contact.address}</p>
           </div>
 
@@ -296,4 +296,3 @@ export const BookingPage = () => {
     </div>
   );
 };
-

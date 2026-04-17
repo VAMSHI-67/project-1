@@ -1,7 +1,13 @@
 import { Instagram, Mail, MapPinned, MessageCircle, Phone } from "lucide-react";
-import { siteConfig, whatsappBookingLink } from "../data/site";
+import { siteConfig } from "../data/site";
+import { getWhatsAppHref, openWhatsAppConversation } from "../lib/whatsapp";
 
 export const ContactPage = () => {
+  const handleWhatsAppClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault();
+    openWhatsAppConversation();
+  };
+
   return (
     <div className="section-padding">
       <div className="mb-10">
@@ -19,9 +25,10 @@ export const ContactPage = () => {
             <p className="text-sm uppercase tracking-[0.2em] text-forest-500">Primary Booking Channel</p>
             <div className="mt-3 flex flex-wrap gap-3">
               <a
-                href={whatsappBookingLink}
+                href={getWhatsAppHref()}
                 target="_blank"
                 rel="noreferrer"
+                onClick={handleWhatsAppClick}
                 className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-forest-700 via-forest-600 to-forest-500 px-5 py-3 text-sm font-semibold text-white shadow-glow"
               >
                 <MessageCircle className="h-4 w-4" /> Book on WhatsApp
@@ -38,9 +45,14 @@ export const ContactPage = () => {
           </div>
 
           <div className="space-y-3 text-sm text-forest-700">
-            <p className="inline-flex items-center gap-2">
-              <Phone className="h-4 w-4 text-forest-600" /> {siteConfig.contact.phoneDisplay}
-            </p>
+            <div className="space-y-2">
+              <p className="inline-flex items-center gap-2">
+                <Phone className="h-4 w-4 text-forest-600" /> {siteConfig.contact.phoneDisplay}
+              </p>
+              <p className="inline-flex items-center gap-2 text-forest-600">
+                <Phone className="h-4 w-4 text-forest-500" /> {siteConfig.contact.alternatePhoneDisplay}
+              </p>
+            </div>
             <p className="inline-flex items-center gap-2">
               <Mail className="h-4 w-4 text-forest-600" /> {siteConfig.contact.email}
             </p>

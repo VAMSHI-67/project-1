@@ -22,7 +22,7 @@ export type Booking = {
   checkInDate: string;
   checkOutDate: string;
   status: BookingStatus;
-  createdAt: string;
+  createdAt: number;
   notes?: string;
 };
 
@@ -51,7 +51,7 @@ export type WalkthroughImage = {
   caption?: string;
   order: number;
   storagePath: string;
-  createdAt: string;
+  createdAt: number;
   category: MediaCategory;
   venueId?: string;
 };

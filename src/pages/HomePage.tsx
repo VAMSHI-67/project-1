@@ -3,7 +3,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, Landmark, MapPinned, MessageCircle, Droplet, Waves } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Card } from "../components/shared/Card";
-import { galleryImages, heroImage, siteConfig, whatsappBookingLink } from "../data/site";
+import { galleryImages, heroImage, siteConfig } from "../data/site";
+import { getWhatsAppHref, openWhatsAppConversation } from "../lib/whatsapp";
 import {
   subscribeActiveVenues,
   subscribeHeroImages,
@@ -131,7 +132,7 @@ export const HomePage = () => {
     galleryImages.map((image) => buildResponsiveAsset(image.src, image.alt, undefined, "walkthrough"))
   );
   const [secondaryImages, setSecondaryImages] = useState<SecondaryAsset[]>([]);
-  const [heroImages, setHeroImages] = useState<ImageAsset[]>([]);
+  const [heroImages, setHeroImages] = useState<ImageAsset[] | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
 
   useEffect(() => {
@@ -175,6 +176,11 @@ export const HomePage = () => {
 
   useEffect(() => {
     const unsubscribe = subscribeHeroImages((items) => {
+      if (!items.length) {
+        setHeroImages([]);
+        return;
+      }
+
       setHeroImages(
         items.map((item) =>
           buildResponsiveAsset(
@@ -202,7 +208,10 @@ export const HomePage = () => {
   }, [walkthroughImages.length]);
 
   const heroAsset = useMemo(
-    () => heroImages[0] ?? buildResponsiveAsset(heroImage.src, heroImage.alt, undefined, "hero"),
+    () =>
+      heroImages === null
+        ? null
+        : heroImages[0] ?? buildResponsiveAsset(heroImage.src, heroImage.alt, undefined, "hero"),
     [heroImages]
   );
   const activeAsset = walkthroughImages[activeIndex];
@@ -238,16 +247,20 @@ export const HomePage = () => {
     <div className="bg-forest-50">
       <section className="relative min-h-[88vh] overflow-hidden">
         <div className="absolute inset-0">
-          <img
-            src={heroAsset.displaySrc}
-            srcSet={heroAsset.srcSet}
-            sizes={heroAsset.sizes}
-            alt={heroAsset.alt}
-            loading="eager"
-            fetchPriority="high"
-            decoding="async"
-            className="h-full w-full object-cover"
-          />
+          {heroAsset ? (
+            <img
+              src={heroAsset.displaySrc}
+              srcSet={heroAsset.srcSet}
+              sizes={heroAsset.sizes}
+              alt={heroAsset.alt}
+              loading="eager"
+              fetchPriority="high"
+              decoding="async"
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <div className="h-full w-full bg-[radial-gradient(circle_at_top,_rgba(212,175,55,0.16),_transparent_36%),linear-gradient(135deg,#173d31,#0f2c22,#1f4d3c)]" />
+          )}
           <div className="absolute inset-0 bg-hero-gradient" />
         </div>
 
@@ -283,9 +296,13 @@ export const HomePage = () => {
             className="mt-10 flex flex-wrap gap-4"
           >
             <a
-              href={whatsappBookingLink}
+              href={getWhatsAppHref()}
               target="_blank"
               rel="noreferrer"
+              onClick={(event) => {
+                event.preventDefault();
+                openWhatsAppConversation();
+              }}
               className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-forest-700 via-forest-600 to-forest-500 px-6 py-3 text-sm font-semibold text-white shadow-glow transition hover:scale-[1.02]"
             >
               <MessageCircle className="h-4 w-4" /> Book Now on WhatsApp

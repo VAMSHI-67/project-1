@@ -39,6 +39,37 @@ const slugify = (value: string) =>
 const sortByCreatedAt = <T extends { createdAt?: number }>(items: T[]) =>
   [...items].sort((a, b) => (a.createdAt ?? 0) - (b.createdAt ?? 0));
 
+const normalizeCreatedAt = (value: unknown): number => {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string") {
+    const numeric = Number(value);
+    if (Number.isFinite(numeric)) return numeric;
+    const parsed = Date.parse(value);
+    if (!Number.isNaN(parsed)) return parsed;
+  }
+  if (
+    typeof value === "object" &&
+    value !== null &&
+    "toMillis" in value &&
+    typeof (value as { toMillis?: unknown }).toMillis === "function"
+  ) {
+    return (value as { toMillis: () => number }).toMillis();
+  }
+  return 0;
+};
+
+const mapBooking = (docId: string, data: Omit<Booking, "id">): Booking => ({
+  id: docId,
+  ...data,
+  createdAt: normalizeCreatedAt(data.createdAt)
+});
+
+const mapWalkthroughImage = (docId: string, data: Omit<WalkthroughImage, "id">): WalkthroughImage => ({
+  id: docId,
+  ...data,
+  createdAt: normalizeCreatedAt(data.createdAt)
+});
+
 export const fetchRooms = async (): Promise<Room[]> => {
   const snapshot = await getDocs(roomsCollection);
   return snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...(docSnap.data() as Omit<Room, "id">) }));
@@ -46,17 +77,17 @@ export const fetchRooms = async (): Promise<Room[]> => {
 
 export const fetchBookingsByRoom = async (roomId: string): Promise<Booking[]> => {
   const snapshot = await getDocs(query(bookingsCollection, where("roomId", "==", roomId)));
-  return snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...(docSnap.data() as Omit<Booking, "id">) }));
+  return snapshot.docs.map((docSnap) => mapBooking(docSnap.id, docSnap.data() as Omit<Booking, "id">));
 };
 
 export const fetchAllBookings = async (): Promise<Booking[]> => {
   const snapshot = await getDocs(query(bookingsCollection, orderBy("checkInDate", "asc")));
-  return snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...(docSnap.data() as Omit<Booking, "id">) }));
+  return snapshot.docs.map((docSnap) => mapBooking(docSnap.id, docSnap.data() as Omit<Booking, "id">));
 };
 
 export const subscribeBookings = (onChange: (bookings: Booking[]) => void) =>
   onSnapshot(query(bookingsCollection, orderBy("checkInDate", "asc")), (snapshot) => {
-    const data = snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...(docSnap.data() as Omit<Booking, "id">) }));
+    const data = snapshot.docs.map((docSnap) => mapBooking(docSnap.id, docSnap.data() as Omit<Booking, "id">));
     onChange(data);
   });
 
@@ -173,10 +204,9 @@ export const subscribeMediaByCategory = (
   onSnapshot(
     query(walkthroughImagesCollection, where("category", "==", category)),
     (snapshot) => {
-      const data = snapshot.docs.map((docSnap) => ({
-        id: docSnap.id,
-        ...(docSnap.data() as Omit<WalkthroughImage, "id">)
-      }));
+      const data = snapshot.docs.map((docSnap) =>
+        mapWalkthroughImage(docSnap.id, docSnap.data() as Omit<WalkthroughImage, "id">)
+      );
       const sorted = [...data].sort((a, b) => {
         const aValue = orderField === "order" ? a.order : Number(a.createdAt ?? 0);
         const bValue = orderField === "order" ? b.order : Number(b.createdAt ?? 0);
@@ -251,7 +281,7 @@ export const cleanupMediaCategory = async (
   deletions.forEach((item) => batch.delete(doc(walkthroughImagesCollection, item.id)));
   await batch.commit();
 
-  return deletions.map((item) => ({ id: item.id, ...item.data } as WalkthroughImage));
+  return deletions.map((item) => mapWalkthroughImage(item.id, item.data));
 };
 
 export const migrateLegacyMediaCategories = async (defaultCategory: MediaCategory) => {

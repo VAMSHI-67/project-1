@@ -1,9 +1,10 @@
-﻿import logoImage from "../../assets/branding/kanvera-logo-green.png";
+import logoImage from "../../assets/branding/kanvera-logo-green.png";
 import { Link, NavLink } from "react-router-dom";
 import { MessageCircle, Menu } from "lucide-react";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { siteConfig, whatsappBookingLink } from "../../data/site";
+import { siteConfig } from "../../data/site";
+import { getWhatsAppHref, openWhatsAppConversation } from "../../lib/whatsapp";
 
 const navItems = [
   { label: "Home", to: "/" },
@@ -13,6 +14,11 @@ const navItems = [
 
 export const Navbar = () => {
   const [open, setOpen] = useState(false);
+
+  const handleWhatsAppClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault();
+    openWhatsAppConversation();
+  };
 
   return (
     <header className="sticky top-0 z-40 border-b border-forest-100 bg-forest-50/85 backdrop-blur-lg">
@@ -41,9 +47,10 @@ export const Navbar = () => {
             </NavLink>
           ))}
           <a
-            href={whatsappBookingLink}
+            href={getWhatsAppHref()}
             target="_blank"
             rel="noreferrer"
+            onClick={handleWhatsAppClick}
             className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-forest-700 via-forest-600 to-forest-500 px-5 py-3 text-sm font-semibold text-white shadow-glow transition hover:scale-[1.02]"
           >
             <MessageCircle className="h-4 w-4" /> Book on WhatsApp
@@ -65,18 +72,17 @@ export const Navbar = () => {
               <NavLink
                 key={item.to}
                 to={item.to}
-                className={({ isActive }) =>
-                  `text-sm font-medium ${isActive ? "text-forest-700" : "text-forest-500"}`
-                }
+                className={({ isActive }) => `text-sm font-medium ${isActive ? "text-forest-700" : "text-forest-500"}`}
                 onClick={() => setOpen(false)}
               >
                 {item.label}
               </NavLink>
             ))}
             <a
-              href={whatsappBookingLink}
+              href={getWhatsAppHref()}
               target="_blank"
               rel="noreferrer"
+              onClick={handleWhatsAppClick}
               className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-forest-700 via-forest-600 to-forest-500 px-5 py-3 text-center text-sm font-semibold text-white shadow-glow"
             >
               <MessageCircle className="h-4 w-4" /> Book on WhatsApp
